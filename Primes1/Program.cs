@@ -7,7 +7,7 @@ Console.WriteLine();
 
 // Parse command line arguments
 var benchmarkType = args.Length > 0 ? args[0] : "all";
-var iterations = args.Length > 1 && int.TryParse(args[1], out var iter) ? iter : 20;
+var iterations = args.Length > 1 && int.TryParse(args[1], out var iter) ? iter : 10;
 
 var results = new List<BenchmarkResult>();
 
@@ -15,9 +15,10 @@ var results = new List<BenchmarkResult>();
 var benchmarks = new Dictionary<string, (IBenchmark Instance, int Scale, int WarmupScale)>
 {
     ["primes"] = (new PrimeBenchmark(), 10_000_000, 1_000_000),
-    ["primes2"] = (new PrimeBenchmark2(), 10_000_000, 1_000_000),
-    ["json"] = (new JsonBenchmark(), 100_000, 10_000),
-    ["regex"] = (new RegexBenchmark(), 50_000, 5_000)
+    ["json"] = (new JsonBenchmark(), 50_000, 10_000),
+    ["regex"] = (new RegexBenchmark(), 50_000, 5_000),
+    ["dictionary"] = (new DictionaryBenchmark(), 100_000, 10_000),
+    ["string"] = (new StringBenchmark(), 10_000, 1_000)
 };
 
 // Determine which benchmarks to run

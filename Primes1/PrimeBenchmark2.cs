@@ -1,6 +1,6 @@
 namespace Primes1;
 
-public class PrimeBenchmark2 : IBenchmark
+public class PrimeBenchmark : IBenchmark
 {
     public object Execute(int scale)
     {
@@ -20,7 +20,7 @@ public class PrimeBenchmark2 : IBenchmark
         return $"First 20 primes: {first20}\nLast 20 primes: {last20}";
     }
 
-    public string GetName() => "Prime Numbers (BitArray optimized)";
+    public string GetName() => "Prime Numbers";
 
     public string GetScaleUnit() => "limit";
 }

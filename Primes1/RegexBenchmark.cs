@@ -107,20 +107,20 @@ public class RegexBenchmark : IBenchmark
                 "Hello, this is a test message from user{0}@example.com. " +
                 "You can visit our website at https://example{1}.com/path/to/resource. " +
                 "Call us at +1 (555) {2:000}-{3:0000} or on {4:000}.{5:000}.{6:0000}. " +
-                "Event date: {7}. Server IP: 192.168.{8}.{9}. " +
+                "Event date: {7:yyyy-MM-dd}. Server IP: 192.168.{8}.{9}. " +
                 "Tags: #test{10} #demo #sample{11} #csharp #performance. " +
                 "HTML content: <div class='container'><p>Content {12}</p></div>. " +
                 "Contact: contact{13}@domain{14}.org or admin{15}@site{16}.net. " +
                 "Visit http://test{17}.example.com for more information. " +
-                "Phone: 555-{18:000}-{19:0000}. Date range: {20} to {21}. ",
+                "Phone: 555-{18:000}-{19:0000}. Date range: {20:yyyy-MM-dd} to {21:yyyy-MM-dd}. ",
                 i,
                 i % 100,
                 i % 1000,
                 i % 10000,
                 i % 1000,
                 i % 1000,
-                i % 10000,
-                DateTime.Now.AddDays(-daysAgo).ToString("yyyy-MM-dd"),
+                i % 10000, 
+                DateTime.Now.AddDays(-daysAgo),
                 i % 256,
                 (i + 1) % 256,
                 i,
@@ -132,10 +132,9 @@ public class RegexBenchmark : IBenchmark
                 i % 100,
                 i,
                 i % 1000,
-                i % 10000,
-                DateTime.Now.AddDays(-daysAgo).ToString("yyyy-MM-dd"),
-                DateTime.Now.AddDays(-daysAgo2).ToString("yyyy-MM-dd")
-            ));
+                i % 10000, 
+                DateTime.Now.AddDays(-daysAgo), 
+                DateTime.Now.AddDays(-daysAgo2)));
         }
 
         return string.Join("\n", textParts);

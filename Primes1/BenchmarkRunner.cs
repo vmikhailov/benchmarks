@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime;
 
 namespace Primes1;
 
@@ -26,8 +27,8 @@ public class BenchmarkRunner
         Console.WriteLine("Configuration:");
         Console.WriteLine($"- Scale ({_benchmark.GetScaleUnit()}): {_scale:N0}");
         Console.WriteLine($"- Test iterations: {_iterations}");
-        Console.WriteLine($"- Server GC: {System.Runtime.GCSettings.IsServerGC}");
-        Console.WriteLine($"- Tiered Compilation: {System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported}");
+        Console.WriteLine($"- Server GC: {GCSettings.IsServerGC}");
+        Console.WriteLine($"- Tiered Compilation: {GetTieredCompilationStatus()}");
         Console.WriteLine();
 
         // Warmup run
@@ -85,12 +86,12 @@ public class BenchmarkRunner
         Console.WriteLine($"  Median:   {GetMedian(memoryUsages) / 1024.0 / 1024.0,9:F2} MB");
         Console.WriteLine();
 
-        if (result != null)
-        {
-            Console.WriteLine("=== SAMPLE OUTPUT ===");
-            Console.WriteLine(_benchmark.GetSample(result));
-            Console.WriteLine();
-        }
+        // if (result != null)
+        // {
+        //     Console.WriteLine("=== SAMPLE OUTPUT ===");
+        //     Console.WriteLine(_benchmark.GetSample(result));
+        //     Console.WriteLine();
+        // }
 
         return new BenchmarkResult
         {
@@ -127,6 +128,24 @@ public class BenchmarkRunner
         double avg = values.Average();
         double sumOfSquares = values.Sum(val => (val - avg) * (val - avg));
         return Math.Sqrt(sumOfSquares / values.Count);
+    }
+
+    private static string GetTieredCompilationStatus()
+    {
+        // Check environment variable and AppContext
+        var envVar = Environment.GetEnvironmentVariable("DOTNET_TieredCompilation") 
+                     ?? Environment.GetEnvironmentVariable("COMPlus_TieredCompilation");
+        
+        // In .NET 6+, tiered compilation is enabled by default unless explicitly disabled
+        if (envVar == "0")
+            return "Disabled (via env var)";
+        
+        // Try to check via AppContext (this is the most reliable way)
+        if (AppContext.TryGetSwitch("System.Runtime.TieredCompilation", out bool isEnabled))
+            return isEnabled ? "Enabled" : "Disabled";
+        
+        // Default for .NET 6+ is enabled
+        return "Enabled (default)";
     }
 }
 
