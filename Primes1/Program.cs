@@ -15,10 +15,11 @@ var results = new List<BenchmarkResult>();
 var benchmarks = new Dictionary<string, (IBenchmark Instance, int Scale, int WarmupScale)>
 {
     ["primes"] = (new PrimeBenchmark(), 10_000_000, 1_000_000),
-    ["json"] = (new JsonBenchmark(), 50_000, 10_000),
+    ["json"] = (new JsonBenchmark(), 100_000, 10_000),
     ["regex"] = (new RegexBenchmark(), 50_000, 5_000),
     ["dictionary"] = (new DictionaryBenchmark(), 100_000, 10_000),
-    ["string"] = (new StringBenchmark(), 10_000, 1_000)
+    ["string"] = (new StringBenchmark(), 10_000, 1_000),
+    ["object"] = (new ObjectBenchmark(), 100_000, 10_000)
 };
 
 // Determine which benchmarks to run
@@ -75,12 +76,12 @@ if (results.Count > 1)
     Console.WriteLine("=======================================================================");
     Console.WriteLine();
 
-    Console.WriteLine($"{"Benchmark",-35} {"Avg Time (s)",12} {"Min Time (s)",12} {"Std Dev (s)",12}");
+    Console.WriteLine($"{"Benchmark",-35} {"Avg Time (ms)",12} {"Min Time (ms)",12} {"Std Dev (ms)",12}");
     Console.WriteLine(new string('-', 70));
 
     foreach (var result in results)
     {
-        Console.WriteLine($"{result.BenchmarkName,-35} {result.AvgTime,12:F4} {result.MinTime,12:F4} {result.StdDev,12:F4}");
+        Console.WriteLine($"{result.BenchmarkName,-35} {result.AvgTime * 1000,12:F2} {result.MinTime * 1000,12:F2} {result.StdDev * 1000,12:F2}");
     }
 
     Console.WriteLine();
