@@ -19,7 +19,8 @@ var benchmarks = new Dictionary<string, (IBenchmark Instance, int Scale, int War
     ["regex"] = (new RegexBenchmark(), 50_000, 5_000),
     ["dictionary"] = (new DictionaryBenchmark(), 100_000, 10_000),
     ["string"] = (new StringBenchmark(), 10_000, 1_000),
-    ["object"] = (new ObjectBenchmark(), 100_000, 10_000)
+    ["object"] = (new ObjectBenchmark(), 100_000, 10_000),
+    ["fibonacci"] = (new FibonacciBenchmark(), 1000, 100)
 };
 
 // Determine which benchmarks to run
