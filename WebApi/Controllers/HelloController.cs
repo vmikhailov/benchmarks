@@ -7,8 +7,9 @@ namespace WebApi.Controllers;
 public class HelloController : ControllerBase
 {
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get()
     {
+        //await Task.Delay(100);
         return Ok(new { message = "Hello World from Controller" });
     }
     

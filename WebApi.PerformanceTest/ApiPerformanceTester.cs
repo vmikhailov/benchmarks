@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Net.Http.Json;
 
 namespace WebApi.PerformanceTest;
 
@@ -7,14 +6,14 @@ public class ApiPerformanceTester
 {
     private readonly HttpClient _httpClient;
 
-    public ApiPerformanceTester(string baseUrl)
+    public ApiPerformanceTester()
     {
-        _httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
+        _httpClient = new();
     }
 
     public async Task<PerformanceResult> TestEndpointAsync(
         string endpointName,
-        string endpoint,
+        string fullUrl,
         int numberOfRequests,
         int concurrentRequests = 1)
     {
@@ -38,7 +37,7 @@ public class ApiPerformanceTester
                 var stopwatch = Stopwatch.StartNew();
                 try
                 {
-                    var response = await _httpClient.GetAsync(endpoint);
+                    var response = await _httpClient.GetAsync(fullUrl);
                     stopwatch.Stop();
                     
                     if (response.IsSuccessStatusCode)
@@ -71,7 +70,7 @@ public class ApiPerformanceTester
 
         var sortedTimes = requestTimes.OrderBy(x => x).ToList();
 
-        return new PerformanceResult
+        return new()
         {
             EndpointName = endpointName,
             TotalRequests = numberOfRequests,
@@ -102,4 +101,3 @@ public class ApiPerformanceTester
         _httpClient.Dispose();
     }
 }
-

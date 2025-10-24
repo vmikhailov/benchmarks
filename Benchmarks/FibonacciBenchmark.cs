@@ -38,7 +38,7 @@ public class FibonacciBenchmark : IBenchmark
     // Memoized Fibonacci (dynamic programming)
     private long FibonacciMemoized(int n, Dictionary<int, long>? memo = null)
     {
-        memo ??= new Dictionary<int, long>();
+        memo ??= new();
         
         if (n <= 1) return n;
         

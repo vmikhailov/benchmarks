@@ -49,7 +49,7 @@ public static class ResultsPresenter
         AnsiConsole.WriteLine();
         var panel = new Panel(CreateComparisonText(controller, minimal))
         {
-            Header = new PanelHeader("[bold green]Performance Comparison[/]"),
+            Header = new("[bold green]Performance Comparison[/]"),
             Border = BoxBorder.Double,
             Padding = new Padding(2, 1)
         };

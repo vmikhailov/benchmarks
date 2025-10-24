@@ -86,31 +86,31 @@ public class JsonBenchmark : IBenchmark
 
         for (int i = 0; i < count; i++)
         {
-            result.Add(new ComplexData
+            result.Add(new()
             {
                 Id = i,
                 Name = $"User_{i}",
                 Email = $"user{i}@example.com",
                 Active = i % 2 == 0,
                 Score = Math.Round(random.Next(0, 10000) / 100.0, 2),
-                Metadata = new Metadata
+                Metadata = new()
                 {
                     Created = DateTime.Now.AddSeconds(-random.Next(0, 31536000)).ToString("yyyy-MM-dd HH:mm:ss"),
                     Tags = [$"tag_{i % 10}", $"tag_{i % 5}", $"tag_{i % 3}"],
-                    Preferences = new Preferences
+                    Preferences = new()
                     {
                         Theme = i % 2 == 0 ? "dark" : "light",
                         Language = languages[i % 5],
                         Notifications = i % 3 == 0
                     }
                 },
-                Nested = new NestedData
+                Nested = new()
                 {
-                    Level1 = new Level1
+                    Level1 = new()
                     {
-                        Level2 = new Level2
+                        Level2 = new()
                         {
-                            Level3 = new Level3
+                            Level3 = new()
                             {
                                 Value = i * 1.5,
                                 Description = "Nested value at level 3"

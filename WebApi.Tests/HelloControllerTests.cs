@@ -15,7 +15,7 @@ public class HelloControllerTests
     [SetUp]
     public void Setup()
     {
-        _factory = new WebApplicationFactory<Program>();
+        _factory = new();
         _client = _factory.CreateClient();
     }
 

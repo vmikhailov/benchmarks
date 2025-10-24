@@ -93,7 +93,7 @@ public class BenchmarkRunner
         //     Console.WriteLine();
         // }
 
-        return new BenchmarkResult
+        return new()
         {
             BenchmarkName = _benchmark.GetName(),
             AvgTime = executionTimes.Average() / 1000.0,

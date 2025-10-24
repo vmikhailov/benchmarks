@@ -88,15 +88,15 @@ public class ObjectBenchmark : IBenchmark
             {
                 Id = i,
                 Name = $"Complex_{i}",
-                Tags = new List<string> { $"tag_{i}", $"category_{i % 10}" },
-                Metadata = new Dictionary<string, object>
+                Tags = new() { $"tag_{i}", $"category_{i % 10}" },
+                Metadata = new()
                 {
                     ["created"] = DateTime.Now,
                     ["priority"] = i % 5,
                     ["score"] = i * 2.5
                 },
                 Created = DateTime.Now.AddDays(-i),
-                Nested = new SimpleObject
+                Nested = new()
                 {
                     Id = i * 2,
                     Name = $"Nested_{i}",
@@ -116,8 +116,8 @@ public class ObjectBenchmark : IBenchmark
                 Type = "DeepDerived",
                 Name = $"Entity_{i}",
                 Score = i * 1.5,
-                Properties = new List<string> { $"prop_{i}", $"attr_{i}" },
-                Counters = new Dictionary<string, int>
+                Properties = new() { $"prop_{i}", $"attr_{i}" },
+                Counters = new()
                 {
                     ["visits"] = i,
                     ["clicks"] = i * 2
@@ -132,7 +132,7 @@ public class ObjectBenchmark : IBenchmark
             var array = new SimpleObject[100];
             for (int j = 0; j < 100; j++)
             {
-                array[j] = new SimpleObject
+                array[j] = new()
                 {
                     Id = i * 100 + j,
                     Name = $"Item_{j}",
@@ -152,12 +152,12 @@ public class ObjectBenchmark : IBenchmark
                 var innerList = new List<ComplexObject>();
                 for (int k = 0; k < 10; k++)
                 {
-                    innerList.Add(new ComplexObject
+                    innerList.Add(new()
                     {
                         Id = i * 100 + j * 10 + k,
                         Name = $"Nested_{i}_{j}_{k}",
-                        Tags = new List<string> { $"tag_{k}" },
-                        Metadata = new Dictionary<string, object> { ["index"] = k },
+                        Tags = new() { $"tag_{k}" },
+                        Metadata = new() { ["index"] = k },
                         Created = DateTime.Now
                     });
                     result.NestedCollectionsCreations++;
@@ -171,8 +171,8 @@ public class ObjectBenchmark : IBenchmark
         {
             Id = 999,
             Name = "Original",
-            Tags = new List<string> { "tag1", "tag2" },
-            Metadata = new Dictionary<string, object> { ["key"] = "value" },
+            Tags = new() { "tag1", "tag2" },
+            Metadata = new() { ["key"] = "value" },
             Created = DateTime.Now
         };
 
@@ -182,8 +182,8 @@ public class ObjectBenchmark : IBenchmark
             {
                 Id = original.Id,
                 Name = original.Name,
-                Tags = new List<string>(original.Tags),
-                Metadata = new Dictionary<string, object>(original.Metadata),
+                Tags = new(original.Tags),
+                Metadata = new(original.Metadata),
                 Created = original.Created
             };
             result.CloneOperations++;
@@ -225,7 +225,7 @@ public class ObjectBenchmark : IBenchmark
     private Node CreateTree(int depth, int baseValue)
     {
         if (depth == 0)
-            return new Node { Value = baseValue, Data = $"Leaf_{baseValue}" };
+            return new() { Value = baseValue, Data = $"Leaf_{baseValue}" };
 
         var node = new Node 
         { 
