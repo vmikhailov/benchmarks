@@ -24,23 +24,19 @@ namespace TreeMap;
 /// </summary>
 public class MapStorage_SortedArray : IMapStorage
 {
-    private struct Entry
+    private class SortedEntry
     {
         public long Key { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
-        public string Label { get; set; }
+        public Entry Entry { get; set; }
 
-        public Entry(long key, int x, int y, string label)
+        public SortedEntry(long key, Entry entry)
         {
             Key = key;
-            X = x;
-            Y = y;
-            Label = label;
+            Entry = entry;
         }
     }
 
-    private readonly List<Entry> _entries;
+    private readonly List<SortedEntry> _entries;
     private readonly int _maxCoordinate;
 
     /// <summary>
@@ -49,7 +45,7 @@ public class MapStorage_SortedArray : IMapStorage
     /// <param name="maxCoordinate">Maximum valid coordinate (default: 1,000,000)</param>
     public MapStorage_SortedArray(int maxCoordinate = 1_000_000)
     {
-        _entries = [];
+        _entries = new List<SortedEntry>();
         _maxCoordinate = maxCoordinate;
     }
 
@@ -61,49 +57,41 @@ public class MapStorage_SortedArray : IMapStorage
         return (long)x * x + (long)y * y;
     }
 
-    public bool Add(int x, int y, string label)
+    public bool Add(Entry entry)
     {
-        ValidateCoordinates(x, y);
-        ArgumentNullException.ThrowIfNull(label);
+        ValidateCoordinates(entry.X, entry.Y);
 
-        var key = ComputeKey(x, y);
-
-        // Binary search to find the first occurrence or insertion point
+        var key = ComputeKey(entry.X, entry.Y);
         var startIndex = BinarySearchFirstOccurrence(key);
 
         if (startIndex >= 0)
         {
-            // Key exists, check for exact coordinate match
-            // Scan forward through all entries with this key
             for (var i = startIndex; i < _entries.Count && _entries[i].Key == key; i++)
             {
-                if (_entries[i].X == x && _entries[i].Y == y)
+                if (_entries[i].Entry.X == entry.X && _entries[i].Entry.Y == entry.Y)
                 {
-                    // Update existing entry
-                    _entries[i] = new(key, x, y, label);
+                    _entries[i] = new(key, entry);
                     return false;
                 }
             }
 
-            // Add new entry after existing ones with the same key
             var insertIndex = startIndex;
             while (insertIndex < _entries.Count && _entries[insertIndex].Key == key)
                 insertIndex++;
 
-            _entries.Insert(insertIndex, new(key, x, y, label));
+            _entries.Insert(insertIndex, new(key, entry));
             return true;
         }
         else
         {
-            // Key doesn't exist, find insertion point using standard binary search
             var index = BinarySearchForKey(key);
-            var insertIndex = ~index; // Bitwise complement gives insertion point
-            _entries.Insert(insertIndex, new(key, x, y, label));
+            var insertIndex = ~index;
+            _entries.Insert(insertIndex, new(key, entry));
             return true;
         }
     }
 
-    public string? Get(int x, int y)
+    public Entry? Get(int x, int y)
     {
         ValidateCoordinates(x, y);
 
@@ -113,20 +101,19 @@ public class MapStorage_SortedArray : IMapStorage
         if (startIndex < 0)
             return null;
 
-        // Search through all entries with this key
         for (var i = startIndex; i < _entries.Count && _entries[i].Key == key; i++)
         {
-            if (_entries[i].X == x && _entries[i].Y == y)
-                return _entries[i].Label;
+            if (_entries[i].Entry.X == x && _entries[i].Entry.Y == y)
+                return _entries[i].Entry;
         }
 
         return null;
     }
 
-    public bool TryGet(int x, int y, out string? label)
+    public bool TryGet(int x, int y, out Entry? entry)
     {
-        label = Get(x, y);
-        return label != null;
+        entry = Get(x, y);
+        return entry != null;
     }
 
     public bool Remove(int x, int y)
@@ -139,11 +126,9 @@ public class MapStorage_SortedArray : IMapStorage
         if (startIndex < 0)
             return false;
 
-
-        // Search for the exact coordinate match
         for (var i = startIndex; i < _entries.Count && _entries[i].Key == key; i++)
         {
-            if (_entries[i].X == x && _entries[i].Y == y)
+            if (_entries[i].Entry.X == x && _entries[i].Entry.Y == y)
             {
                 _entries.RemoveAt(i);
                 return true;
@@ -158,12 +143,18 @@ public class MapStorage_SortedArray : IMapStorage
         return Get(x, y) != null;
     }
 
-    public IEnumerable<(int x, int y, string label)> ListAll()
+    public Entry[] ListAll()
     {
-        return _entries.Select(e => (e.X, e.Y, e.Label));
+        var result = new Entry[_entries.Count];
+        var i = 0;
+        foreach (var e in _entries)
+        {
+            result[i++] = e.Entry;
+        }
+        return result;
     }
 
-    public IEnumerable<(int x, int y, string label)> GetInRegion(int minX, int minY, int maxX, int maxY)
+    public Entry[] GetInRegion(int minX, int minY, int maxX, int maxY)
     {
         ValidateCoordinates(minX, minY);
         ValidateCoordinates(maxX, maxY);
@@ -171,26 +162,32 @@ public class MapStorage_SortedArray : IMapStorage
         if (minX > maxX || minY > maxY)
             throw new ArgumentException("Invalid region bounds");
 
-        return _entries
-            .Where(e => e.X >= minX && e.X <= maxX && e.Y >= minY && e.Y <= maxY)
-            .Select(e => (e.X, e.Y, e.Label));
+        var result = new List<Entry>();
+        foreach (var sortedEntry in _entries)
+        {
+            var entry = sortedEntry.Entry;
+            if (entry.X >= minX && entry.X <= maxX && entry.Y >= minY && entry.Y <= maxY)
+            {
+                result.Add(entry);
+            }
+        }
+        return result.ToArray();
     }
 
-    public IEnumerable<(int x, int y, string label)> GetWithinRadius(int radius)
+    public Entry[] GetWithinRadius(int radius)
     {
         if (radius < 0)
             throw new ArgumentOutOfRangeException(nameof(radius), "Radius must be non-negative");
 
         var radiusSquared = (long)radius * radius;
-
-        // Binary search to find the first entry with the key >= radiusSquared
         var upperBoundIndex = BinarySearchUpperBound(radiusSquared);
 
-        // Return all entries before the upper bound
+        var result = new Entry[upperBoundIndex];
         for (var i = 0; i < upperBoundIndex; i++)
         {
-            yield return (_entries[i].X, _entries[i].Y, _entries[i].Label);
+            result[i] = _entries[i].Entry;
         }
+        return result;
     }
 
     public void Clear()
@@ -323,4 +320,3 @@ public class MapStorage_SortedArray : IMapStorage
         return (_entries.Count, uniqueKeys, maxCollisions);
     }
 }
-

@@ -21,10 +21,11 @@ public enum StorageType
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [RankColumn]
 [HideColumns("Error", "StdDev", "Median")]
+[SimpleJob(warmupCount: 1, iterationCount: 3)]
 public class MapStorageBenchmarks
 {
     private IMapStorage _prePopulatedStorage = null!;
-    private List<(int x, int y, string label)> _testData = null!;
+    private List<Entry> _testData = null!;
     private List<(int x, int y)> _lookupCoordinates = null!;
 
     [Params(StorageType.Dictionary, StorageType.BST, StorageType.SortedArray, StorageType.SortedDictionary)]
@@ -43,7 +44,7 @@ public class MapStorageBenchmarks
         _lookupCoordinates = new();
 
         // Add existing coordinates
-        _lookupCoordinates.AddRange(_testData.Take(500).Select(t => (t.x, t.y)));
+        _lookupCoordinates.AddRange(_testData.Take(20).Select(t => (t.X, t.Y)));
 
         // Add non-existing coordinates
         var random = new Random(123);
@@ -55,9 +56,9 @@ public class MapStorageBenchmarks
 
         // Pre-populate storage
         _prePopulatedStorage = CreateStorage();
-        foreach (var (x, y, label) in _testData)
+        foreach (var entry in _testData)
         {
-            _prePopulatedStorage.Add(x, y, label);
+            _prePopulatedStorage.Add(entry);
         }
     }
 
@@ -76,9 +77,9 @@ public class MapStorageBenchmarks
     {
         var storage = CreateStorage();
 
-        foreach (var (x, y, label) in _testData)
+        foreach (var entry in _testData)
         {
-            storage.Add(x, y, label);
+            storage.Add(entry);
         }
     }
 
@@ -124,15 +125,15 @@ public class MapStorageBenchmarks
         var storage = CreateStorage();
 
         // Add items
-        foreach (var (x, y, label) in _testData.Take(50))
+        foreach (var entry in _testData.Take(50))
         {
-            storage.Add(x, y, label);
+            storage.Add(entry);
         }
 
         // Remove items
-        foreach (var (x, y, _) in _testData.Take(25))
+        foreach (var entry in _testData.Take(25))
         {
-            storage.Remove(x, y);
+            storage.Remove(entry.X, entry.Y);
         }
     }
 }
@@ -146,7 +147,7 @@ public class MapStorageBenchmarks
 [HideColumns("Error", "StdDev")]
 public class CollisionBenchmarks
 {
-    private List<(int x, int y, string label)> _collisionData = null!;
+    private List<Entry> _collisionData = null!;
 
     [Params(StorageType.Dictionary, StorageType.BST, StorageType.SortedArray, StorageType.SortedDictionary)]
     public StorageType Storage { get; set; }
@@ -177,8 +178,8 @@ public class CollisionBenchmarks
 
                 if (x < 1_000_000 && y < 1_000_000)
                 {
-                    _collisionData.Add((x, y, $"label_{counter++}"));
-                    _collisionData.Add((y, x, $"label_{counter++}")); // Swap for collision
+                    _collisionData.Add(new Entry(x, y, $"label_{counter++}"));
+                    _collisionData.Add(new Entry(y, x, $"label_{counter++}")); // Swap for collision
                 }
             }
         }
@@ -199,15 +200,15 @@ public class CollisionBenchmarks
     {
         var storage = CreateStorage();
 
-        foreach (var (x, y, label) in _collisionData)
+        foreach (var entry in _collisionData)
         {
-            storage.Add(x, y, label);
+            storage.Add(entry);
         }
 
         // Retrieve all
-        foreach (var (x, y, _) in _collisionData)
+        foreach (var entry in _collisionData)
         {
-            storage.Get(x, y);
+            storage.Get(entry.X, entry.Y);
         }
     }
 }

@@ -99,7 +99,7 @@ public class RegexBenchmark : IBenchmark
     {
         var textParts = new List<string>(scale);
 
-        for (int i = 0; i < scale; i++)
+        for (var i = 0; i < scale; i++)
         {
             var daysAgo = i;
             var daysAgo2 = Math.Max(0, i - 7);

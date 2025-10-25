@@ -20,7 +20,7 @@ public class MapStorage_BST : IMapStorage
     private class BSTNode
     {
         public long Key { get; set; }
-        public List<(int x, int y, string label)> Entries { get; set; }
+        public List<Entry> Entries { get; set; }
         public BSTNode? Left { get; set; }
         public BSTNode? Right { get; set; }
 
@@ -55,23 +55,22 @@ public class MapStorage_BST : IMapStorage
         return (long)x * x + (long)y * y;
     }
 
-    public bool Add(int x, int y, string label)
+    public bool Add(Entry entry)
     {
-        ValidateCoordinates(x, y);
-        ArgumentNullException.ThrowIfNull(label);
+        ValidateCoordinates(entry.X, entry.Y);
 
-        var key = ComputeKey(x, y);
+        var key = ComputeKey(entry.X, entry.Y);
         var isNew = true;
 
         if (_root == null)
         {
             _root = new(key);
-            _root.Entries.Add((x, y, label));
+            _root.Entries.Add(entry);
             _count++;
             return true;
         }
 
-        _root = AddRecursive(_root, key, x, y, label, ref isNew);
+        _root = AddRecursive(_root, key, entry, ref isNew);
 
         if (isNew)
             _count++;
@@ -79,45 +78,45 @@ public class MapStorage_BST : IMapStorage
         return isNew;
     }
 
-    private BSTNode AddRecursive(BSTNode node, long key, int x, int y, string label, ref bool isNew)
+    private BSTNode AddRecursive(BSTNode node, long key, Entry entry, ref bool isNew)
     {
         if (node == null)
         {
             var newNode = new BSTNode(key);
-            newNode.Entries.Add((x, y, label));
+            newNode.Entries.Add(entry);
             return newNode;
         }
 
         if (key < node.Key)
         {
-            node.Left = AddRecursive(node.Left!, key, x, y, label, ref isNew);
+            node.Left = AddRecursive(node.Left!, key, entry, ref isNew);
         }
         else if (key > node.Key)
         {
-            node.Right = AddRecursive(node.Right!, key, x, y, label, ref isNew);
+            node.Right = AddRecursive(node.Right!, key, entry, ref isNew);
         }
         else // key == node.Key (collision or update)
         {
             // Check if coordinates already exist
             for (var i = 0; i < node.Entries.Count; i++)
             {
-                if (node.Entries[i].x == x && node.Entries[i].y == y)
+                if (node.Entries[i].X == entry.X && node.Entries[i].Y == entry.Y)
                 {
                     // Update existing entry
-                    node.Entries[i] = (x, y, label);
+                    node.Entries[i] = entry;
                     isNew = false;
                     return node;
                 }
             }
 
             // Add new entry (collision case)
-            node.Entries.Add((x, y, label));
+            node.Entries.Add(entry);
         }
 
         return node;
     }
 
-    public string? Get(int x, int y)
+    public Entry? Get(int x, int y)
     {
         ValidateCoordinates(x, y);
 
@@ -130,17 +129,17 @@ public class MapStorage_BST : IMapStorage
         // Search through collision list
         foreach (var entry in node.Entries)
         {
-            if (entry.x == x && entry.y == y)
-                return entry.label;
+            if (entry.X == x && entry.Y == y)
+                return entry;
         }
 
         return null;
     }
 
-    public bool TryGet(int x, int y, out string? label)
+    public bool TryGet(int x, int y, out Entry? entry)
     {
-        label = Get(x, y);
-        return label != null;
+        entry = Get(x, y);
+        return entry != null;
     }
 
     private BSTNode? FindNode(BSTNode? node, long key)
@@ -190,7 +189,7 @@ public class MapStorage_BST : IMapStorage
             // Find and remove the specific entry
             for (var i = 0; i < node.Entries.Count; i++)
             {
-                if (node.Entries[i].x == x && node.Entries[i].y == y)
+                if (node.Entries[i].X == x && node.Entries[i].Y == y)
                 {
                     node.Entries.RemoveAt(i);
                     removed = true;
@@ -245,14 +244,14 @@ public class MapStorage_BST : IMapStorage
         return Get(x, y) != null;
     }
 
-    public IEnumerable<(int x, int y, string label)> ListAll()
+    public Entry[] ListAll()
     {
-        var result = new List<(int x, int y, string label)>();
+        var result = new List<Entry>();
         InOrderTraversal(_root, result);
-        return result;
+        return result.ToArray();
     }
 
-    private void InOrderTraversal(BSTNode? node, List<(int x, int y, string label)> result)
+    private void InOrderTraversal(BSTNode? node, List<Entry> result)
     {
         if (node == null)
             return;
@@ -262,7 +261,7 @@ public class MapStorage_BST : IMapStorage
         InOrderTraversal(node.Right, result);
     }
 
-    public IEnumerable<(int x, int y, string label)> GetInRegion(int minX, int minY, int maxX, int maxY)
+    public Entry[] GetInRegion(int minX, int minY, int maxX, int maxY)
     {
         ValidateCoordinates(minX, minY);
         ValidateCoordinates(maxX, maxY);
@@ -270,26 +269,36 @@ public class MapStorage_BST : IMapStorage
         if (minX > maxX || minY > maxY)
             throw new ArgumentException("Invalid region bounds");
 
-        return ListAll()
-            .Where(entry => entry.x >= minX && entry.x <= maxX &&
-                           entry.y >= minY && entry.y <= maxY);
+        var result = new List<Entry>();
+        var allEntries = ListAll();
+
+        foreach (var entry in allEntries)
+        {
+            if (entry.X >= minX && entry.X <= maxX &&
+                entry.Y >= minY && entry.Y <= maxY)
+            {
+                result.Add(entry);
+            }
+        }
+
+        return result.ToArray();
     }
 
-    public IEnumerable<(int x, int y, string label)> GetWithinRadius(int radius)
+    public Entry[] GetWithinRadius(int radius)
     {
         if (radius < 0)
             throw new ArgumentOutOfRangeException(nameof(radius), "Radius must be non-negative");
 
         var radiusSquared = (long)radius * radius;
-        var result = new List<(int x, int y, string label)>();
+        var result = new List<Entry>();
 
         // Optimized: Only traverse BST nodes with key < radiusSquared
         GetWithinRadiusRecursive(_root, radiusSquared, result);
 
-        return result;
+        return result.ToArray();
     }
 
-    private void GetWithinRadiusRecursive(BSTNode? node, long radiusSquared, List<(int x, int y, string label)> result)
+    private void GetWithinRadiusRecursive(BSTNode? node, long radiusSquared, List<Entry> result)
     {
         if (node == null)
             return;

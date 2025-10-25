@@ -48,7 +48,7 @@ public class BenchmarkRunner
         Console.WriteLine($"Running {_iterations} benchmark iterations...");
         Console.WriteLine(new string('-', 70));
 
-        for (int i = 1; i <= _iterations; i++)
+        for (var i = 1; i <= _iterations; i++)
         {
             // Memory tracking
             GC.Collect();
@@ -125,8 +125,8 @@ public class BenchmarkRunner
 
     private static double GetStandardDeviation(List<long> values)
     {
-        double avg = values.Average();
-        double sumOfSquares = values.Sum(val => (val - avg) * (val - avg));
+        var avg = values.Average();
+        var sumOfSquares = values.Sum(val => (val - avg) * (val - avg));
         return Math.Sqrt(sumOfSquares / values.Count);
     }
 
@@ -141,7 +141,7 @@ public class BenchmarkRunner
             return "Disabled (via env var)";
         
         // Try to check via AppContext (this is the most reliable way)
-        if (AppContext.TryGetSwitch("System.Runtime.TieredCompilation", out bool isEnabled))
+        if (AppContext.TryGetSwitch("System.Runtime.TieredCompilation", out var isEnabled))
             return isEnabled ? "Enabled" : "Disabled";
         
         // Default for .NET 6+ is enabled

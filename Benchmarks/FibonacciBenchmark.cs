@@ -26,9 +26,9 @@ public class FibonacciBenchmark : IBenchmark
         if (n <= 1) return n;
         
         long a = 0, b = 1;
-        for (int i = 2; i <= n; i++)
+        for (var i = 2; i <= n; i++)
         {
-            long temp = a + b;
+            var temp = a + b;
             a = b;
             b = temp;
         }
@@ -45,7 +45,7 @@ public class FibonacciBenchmark : IBenchmark
         if (memo.ContainsKey(n))
             return memo[n];
         
-        long result = FibonacciMemoized(n - 1, memo) + FibonacciMemoized(n - 2, memo);
+        var result = FibonacciMemoized(n - 1, memo) + FibonacciMemoized(n - 2, memo);
         memo[n] = result;
         return result;
     }
@@ -56,8 +56,8 @@ public class FibonacciBenchmark : IBenchmark
 
         // 1. Recursive Fibonacci (smaller values due to exponential complexity)
         // Calculate Fibonacci for values up to scale/10 (max ~35 for reasonable time)
-        int maxRecursive = Math.Min(35, scale / 10);
-        for (int i = 0; i <= maxRecursive; i++)
+        var maxRecursive = Math.Min(35, scale / 10);
+        for (var i = 0; i <= maxRecursive; i++)
         {
             var fib = FibonacciRecursive(i);
             //var fib = 0;
@@ -67,7 +67,7 @@ public class FibonacciBenchmark : IBenchmark
         }
 
         // 2. Iterative Fibonacci (can handle much larger values)
-        for (int i = 0; i < scale; i++)
+        for (var i = 0; i < scale; i++)
         {
             var fib = FibonacciIterative(i % 90); // Keep under long overflow
             if (i == scale - 1)
@@ -76,7 +76,7 @@ public class FibonacciBenchmark : IBenchmark
         }
 
         // 3. Memoized Fibonacci (efficient with caching)
-        for (int i = 0; i < scale / 10; i++)
+        for (var i = 0; i < scale / 10; i++)
         {
             var memo = new Dictionary<int, long>();
             var fib = FibonacciMemoized(Math.Min(90, i + 20), memo);
@@ -86,14 +86,14 @@ public class FibonacciBenchmark : IBenchmark
         }
 
         // 4. Multiple recursive calls to stress test
-        for (int i = 20; i <= Math.Min(30, maxRecursive); i++)
+        for (var i = 20; i <= Math.Min(30, maxRecursive); i++)
         {
             var fib = FibonacciRecursive(i);
             result.RecursiveCalculations++;
         }
 
         // 5. Large iterative calculations
-        for (int i = 0; i < scale / 100; i++)
+        for (var i = 0; i < scale / 100; i++)
         {
             var fib1 = FibonacciIterative(50);
             var fib2 = FibonacciIterative(75);
@@ -102,10 +102,10 @@ public class FibonacciBenchmark : IBenchmark
         }
 
         // 6. Memoization with different cache sizes
-        for (int i = 0; i < scale / 50; i++)
+        for (var i = 0; i < scale / 50; i++)
         {
             var memo = new Dictionary<int, long>();
-            for (int j = 0; j < 50; j++)
+            for (var j = 0; j < 50; j++)
             {
                 var fib = FibonacciMemoized(j, memo);
                 result.MemoizedCalculations++;

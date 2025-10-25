@@ -14,7 +14,7 @@ namespace TreeMap;
 /// </summary>
 public class MapStorage_Dictionary : IMapStorage
 {
-    private readonly Dictionary<(int x, int y), string> _labels;
+    private readonly Dictionary<(int x, int y), Entry> _labels;
     private readonly int _maxCoordinate;
 
     /// <summary>
@@ -30,20 +30,16 @@ public class MapStorage_Dictionary : IMapStorage
     /// <summary>
     /// Adds or updates a label at the specified coordinates.
     /// </summary>
-    /// <param name="x">X coordinate (0 to maxCoordinate-1)</param>
-    /// <param name="y">Y coordinate (0 to maxCoordinate-1)</param>
-    /// <param name="label">Label text</param>
+    /// <param name="entry">The entry to add</param>
     /// <returns>True if added, false if updated existing</returns>
     /// <exception cref="ArgumentOutOfRangeException">If coordinates are invalid</exception>
-    /// <exception cref="ArgumentNullException">If label is null</exception>
-    public bool Add(int x, int y, string label)
+    public bool Add(Entry entry)
     {
-        ValidateCoordinates(x, y);
-        ArgumentNullException.ThrowIfNull(label);
+        ValidateCoordinates(entry.X, entry.Y);
 
-        var key = (x, y);
+        var key = (entry.X, entry.Y);
         var isNew = !_labels.ContainsKey(key);
-        _labels[key] = label;
+        _labels[key] = entry;
         return isNew;
     }
 
@@ -52,8 +48,8 @@ public class MapStorage_Dictionary : IMapStorage
     /// </summary>
     /// <param name="x">X coordinate</param>
     /// <param name="y">Y coordinate</param>
-    /// <returns>Label text if found, null otherwise</returns>
-    public string? Get(int x, int y)
+    /// <returns>Entry if found, null otherwise</returns>
+    public Entry? Get(int x, int y)
     {
         ValidateCoordinates(x, y);
         return _labels.GetValueOrDefault((x, y));
@@ -64,12 +60,12 @@ public class MapStorage_Dictionary : IMapStorage
     /// </summary>
     /// <param name="x">X coordinate</param>
     /// <param name="y">Y coordinate</param>
-    /// <param name="label">The label if found</param>
-    /// <returns>True if label exists, false otherwise</returns>
-    public bool TryGet(int x, int y, out string? label)
+    /// <param name="entry">The entry if found</param>
+    /// <returns>True if entry exists, false otherwise</returns>
+    public bool TryGet(int x, int y, out Entry? entry)
     {
         ValidateCoordinates(x, y);
-        return _labels.TryGetValue((x, y), out label);
+        return _labels.TryGetValue((x, y), out entry);
     }
 
     /// <summary>
@@ -96,10 +92,16 @@ public class MapStorage_Dictionary : IMapStorage
     /// <summary>
     /// Returns all labels with their coordinates.
     /// </summary>
-    /// <returns>Enumerable of (x, y, label) tuples</returns>
-    public IEnumerable<(int x, int y, string label)> ListAll()
+    /// <returns>Array of entries</returns>
+    public Entry[] ListAll()
     {
-        return _labels.Select(kvp => (kvp.Key.x, kvp.Key.y, kvp.Value));
+        var result = new Entry[_labels.Count];
+        var index = 0;
+        foreach (var entry in _labels.Values)
+        {
+            result[index++] = entry;
+        }
+        return result;
     }
 
     /// <summary>
@@ -109,8 +111,8 @@ public class MapStorage_Dictionary : IMapStorage
     /// <param name="minY">Minimum Y coordinate (inclusive)</param>
     /// <param name="maxX">Maximum X coordinate (inclusive)</param>
     /// <param name="maxY">Maximum Y coordinate (inclusive)</param>
-    /// <returns>Labels within the specified region</returns>
-    public IEnumerable<(int x, int y, string label)> GetInRegion(int minX, int minY, int maxX, int maxY)
+    /// <returns>Array of entries within the specified region</returns>
+    public Entry[] GetInRegion(int minX, int minY, int maxX, int maxY)
     {
         ValidateCoordinates(minX, minY);
         ValidateCoordinates(maxX, maxY);
@@ -118,22 +120,34 @@ public class MapStorage_Dictionary : IMapStorage
         if (minX > maxX || minY > maxY)
             throw new ArgumentException("Invalid region bounds");
 
-        return _labels
-            .Where(kvp => kvp.Key.x >= minX && kvp.Key.x <= maxX &&
-                         kvp.Key.y >= minY && kvp.Key.y <= maxY)
-            .Select(kvp => (kvp.Key.x, kvp.Key.y, kvp.Value));
+        var result = new List<Entry>();
+        foreach (var entry in _labels.Values)
+        {
+            if (entry.X >= minX && entry.X <= maxX &&
+                entry.Y >= minY && entry.Y <= maxY)
+            {
+                result.Add(entry);
+            }
+        }
+        return result.ToArray();
     }
 
-    public IEnumerable<(int x, int y, string label)> GetWithinRadius(int radius)
+    public Entry[] GetWithinRadius(int radius)
     {
         if (radius < 0)
             throw new ArgumentOutOfRangeException(nameof(radius), "Radius must be non-negative");
 
         var radiusSquared = (long)radius * radius;
+        var result = new List<Entry>();
 
-        return _labels
-            .Where(kvp => (long)kvp.Key.x * kvp.Key.x + (long)kvp.Key.y * kvp.Key.y < radiusSquared)
-            .Select(kvp => (kvp.Key.x, kvp.Key.y, kvp.Value));
+        foreach (var entry in _labels.Values)
+        {
+            if ((long)entry.X * entry.X + (long)entry.Y * entry.Y < radiusSquared)
+            {
+                result.Add(entry);
+            }
+        }
+        return result.ToArray();
     }
 
     /// <summary>

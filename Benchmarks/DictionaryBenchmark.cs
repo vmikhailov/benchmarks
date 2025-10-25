@@ -20,7 +20,7 @@ public class DictionaryBenchmark : IBenchmark
         var dict = new Dictionary<string, object>(scale);
 
         // 1. Insert operations
-        for (int i = 0; i < scale; i++)
+        for (var i = 0; i < scale; i++)
         {
             dict[$"key_{i}"] = new
             {
@@ -40,7 +40,7 @@ public class DictionaryBenchmark : IBenchmark
         }
 
         // 2. Lookup operations
-        for (int i = 0; i < scale; i += 2)
+        for (var i = 0; i < scale; i += 2)
         {
             var key = $"key_{i}";
             if (dict.TryGetValue(key, out var value))
@@ -50,7 +50,7 @@ public class DictionaryBenchmark : IBenchmark
         }
 
         // 3. ContainsKey operations
-        for (int i = 0; i < scale; i += 5)
+        for (var i = 0; i < scale; i += 5)
         {
             if (dict.ContainsKey($"key_{i}"))
             {
@@ -59,7 +59,7 @@ public class DictionaryBenchmark : IBenchmark
         }
 
         // 4. Update operations
-        for (int i = 0; i < scale; i += 3)
+        for (var i = 0; i < scale; i += 3)
         {
             var key = $"key_{i}";
             if (dict.ContainsKey(key))
@@ -91,7 +91,7 @@ public class DictionaryBenchmark : IBenchmark
         }
 
         // 6. Delete operations
-        for (int i = 0; i < scale; i += 10)
+        for (var i = 0; i < scale; i += 10)
         {
             if (dict.Remove($"key_{i}"))
             {

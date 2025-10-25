@@ -20,28 +20,10 @@ namespace TreeMap;
 /// </summary>
 public class MapStorage_SortedDictionary : IMapStorage
 {
-    private class Entry
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
-        public string Label { get; set; }
-
-        public Entry(int x, int y, string label)
-        {
-            X = x;
-            Y = y;
-            Label = label;
-        }
-    }
-
     private readonly SortedDictionary<long, List<Entry>> _sortedDict;
     private readonly int _maxCoordinate;
     private int _count;
 
-    /// <summary>
-    /// Initializes a new SortedDictionary-based map storage.
-    /// </summary>
-    /// <param name="maxCoordinate">Maximum valid coordinate (default: 1,000,000)</param>
     public MapStorage_SortedDictionary(int maxCoordinate = 1_000_000)
     {
         _sortedDict = new SortedDictionary<long, List<Entry>>();
@@ -49,51 +31,42 @@ public class MapStorage_SortedDictionary : IMapStorage
         _count = 0;
     }
 
-    /// <summary>
-    /// Computes the key for given coordinates.
-    /// </summary>
     private long ComputeKey(int x, int y)
     {
         return (long)x * x + (long)y * y;
     }
 
-    public bool Add(int x, int y, string label)
+    public bool Add(Entry entry)
     {
-        ValidateCoordinates(x, y);
-        ArgumentNullException.ThrowIfNull(label);
+        ValidateCoordinates(entry.X, entry.Y);
 
-        var key = ComputeKey(x, y);
+        var key = ComputeKey(entry.X, entry.Y);
 
-        // Try to find an existing list with this key
         if (_sortedDict.TryGetValue(key, out var entries))
         {
-            // Check if coordinates already exist
-            foreach (var entry in entries)
+            for (var i = 0; i < entries.Count; i++)
             {
-                if (entry.X == x && entry.Y == y)
+                if (entries[i].X == entry.X && entries[i].Y == entry.Y)
                 {
-                    // Update existing entry
-                    entry.Label = label;
+                    entries[i] = entry;
                     return false;
                 }
             }
 
-            // Add a new entry to collision list
-            entries.Add(new Entry(x, y, label));
+            entries.Add(entry);
             _count++;
             return true;
         }
         else
         {
-            // Create a new list for this key
-            var newList = new List<Entry> { new Entry(x, y, label) };
+            var newList = new List<Entry> { entry };
             _sortedDict[key] = newList;
             _count++;
             return true;
         }
     }
 
-    public string? Get(int x, int y)
+    public Entry? Get(int x, int y)
     {
         ValidateCoordinates(x, y);
 
@@ -101,21 +74,20 @@ public class MapStorage_SortedDictionary : IMapStorage
 
         if (_sortedDict.TryGetValue(key, out var entries))
         {
-            // Search through collision list
             foreach (var entry in entries)
             {
                 if (entry.X == x && entry.Y == y)
-                    return entry.Label;
+                    return entry;
             }
         }
 
         return null;
     }
 
-    public bool TryGet(int x, int y, out string? label)
+    public bool TryGet(int x, int y, out Entry? entry)
     {
-        label = Get(x, y);
-        return label != null;
+        entry = Get(x, y);
+        return entry != null;
     }
 
     public bool Remove(int x, int y)
@@ -126,7 +98,6 @@ public class MapStorage_SortedDictionary : IMapStorage
 
         if (_sortedDict.TryGetValue(key, out var entries))
         {
-            // Find and remove the specific entry
             for (var i = 0; i < entries.Count; i++)
             {
                 if (entries[i].X == x && entries[i].Y == y)
@@ -134,7 +105,6 @@ public class MapStorage_SortedDictionary : IMapStorage
                     entries.RemoveAt(i);
                     _count--;
 
-                    // If list is now empty, remove the key
                     if (entries.Count == 0)
                     {
                         _sortedDict.Remove(key);
@@ -153,18 +123,21 @@ public class MapStorage_SortedDictionary : IMapStorage
         return Get(x, y) != null;
     }
 
-    public IEnumerable<(int x, int y, string label)> ListAll()
+    public Entry[] ListAll()
     {
+        var result = new Entry[_count];
+        var index = 0;
         foreach (var kvp in _sortedDict)
         {
             foreach (var entry in kvp.Value)
             {
-                yield return (entry.X, entry.Y, entry.Label);
+                result[index++] = entry;
             }
         }
+        return result;
     }
 
-    public IEnumerable<(int x, int y, string label)> GetInRegion(int minX, int minY, int maxX, int maxY)
+    public Entry[] GetInRegion(int minX, int minY, int maxX, int maxY)
     {
         ValidateCoordinates(minX, minY);
         ValidateCoordinates(maxX, maxY);
@@ -172,69 +145,58 @@ public class MapStorage_SortedDictionary : IMapStorage
         if (minX > maxX || minY > maxY)
             throw new ArgumentException("Invalid region bounds");
 
-        // Calculate the minimum and maximum possible distances (x² + y²) for points in the region
-        // Minimum distance: closest corner to origin
-        var minDistSquared = (long)Math.Min(Math.Abs(minX), Math.Abs(maxX)) * Math.Min(Math.Abs(minX), Math.Abs(maxX)) +
-                            (long)Math.Min(Math.Abs(minY), Math.Abs(maxY)) * Math.Min(Math.Abs(minY), Math.Abs(maxY));
+        long minDistSquared;
 
-        // If region contains origin, min distance is 0
         if (minX <= 0 && maxX >= 0 && minY <= 0 && maxY >= 0)
             minDistSquared = 0;
         else
         {
-            // Find the closest point in the rectangle to the origin
             var closestX = Math.Max(minX, Math.Min(0, maxX));
             var closestY = Math.Max(minY, Math.Min(0, maxY));
             minDistSquared = (long)closestX * closestX + (long)closestY * closestY;
         }
 
-        // Maximum distance: farthest corner from origin
         var maxDistSquared = Math.Max((long)minX * minX, (long)maxX * maxX) +
                             Math.Max((long)minY * minY, (long)maxY * maxY);
 
-        // Use binary search approach: iterate through sorted keys in the valid range
+        var result = new List<Entry>();
         foreach (var kvp in _sortedDict)
         {
-            // Skip entries with keys below minimum distance
             if (kvp.Key < minDistSquared)
                 continue;
 
-            // Stop when we exceed maximum possible distance
             if (kvp.Key > maxDistSquared)
                 break;
 
-            // Check each entry in the collision list
             foreach (var entry in kvp.Value)
             {
                 if (entry.X >= minX && entry.X <= maxX &&
                     entry.Y >= minY && entry.Y <= maxY)
                 {
-                    yield return (entry.X, entry.Y, entry.Label);
+                    result.Add(entry);
                 }
             }
         }
+        return result.ToArray();
     }
 
-    public IEnumerable<(int x, int y, string label)> GetWithinRadius(int radius)
+    public Entry[] GetWithinRadius(int radius)
     {
         if (radius < 0)
             throw new ArgumentOutOfRangeException(nameof(radius), "Radius must be non-negative");
 
         var radiusSquared = (long)radius * radius;
+        var result = new List<Entry>();
 
-        // Iterate through sorted dictionary - keys are ordered by x^2 + y^2
-        // Stop as soon as we reach a key >= radiusSquared
         foreach (var kvp in _sortedDict)
         {
             if (kvp.Key >= radiusSquared)
-                break; // All remaining keys will be larger
+                break;
 
-            // All entries in this list are within radius
-            foreach (var entry in kvp.Value)
-            {
-                yield return (entry.X, entry.Y, entry.Label);
-            }
+            result.AddRange(kvp.Value);
         }
+
+        return result.ToArray();
     }
 
     public void Clear()
@@ -253,9 +215,6 @@ public class MapStorage_SortedDictionary : IMapStorage
             throw new ArgumentOutOfRangeException(nameof(y), $"Y must be between 0 and {_maxCoordinate - 1}");
     }
 
-    /// <summary>
-   /// Gets statistics about the SortedDictionary structure and collisions.
-    /// </summary>
     public (int nodes, int maxCollisions, int totalCollisions) GetStatistics()
     {
         var nodes = _sortedDict.Count;

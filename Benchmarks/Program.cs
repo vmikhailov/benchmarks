@@ -44,7 +44,7 @@ else
 }
 
 // Run selected benchmarks
-for (int i = 0; i < toRun.Count; i++)
+for (var i = 0; i < toRun.Count; i++)
 {
     var name = toRun[i];
     var config = benchmarks[name];

@@ -25,7 +25,7 @@ public class StringBenchmark : IBenchmark
         // 1. String concatenation operations
         var concat1 = "";
 
-        for (int i = 0; i < scale / 100; i++)
+        for (var i = 0; i < scale / 100; i++)
         {
             concat1 += $"item_{i},";
             result.ConcatenationOps++;
@@ -34,7 +34,7 @@ public class StringBenchmark : IBenchmark
         // 2. StringBuilder operations (efficient concatenation)
         var sb = new StringBuilder(scale);
 
-        for (int i = 0; i < scale / 10; i++)
+        for (var i = 0; i < scale / 10; i++)
         {
             sb.Append($"item_{i},");
             result.ConcatenationOps++;
@@ -45,7 +45,7 @@ public class StringBenchmark : IBenchmark
         // 3. String splitting operations
         var testString = string.Join(",", Enumerable.Range(0, scale / 100).Select(i => $"word_{i}"));
 
-        for (int i = 0; i < 100; i++)
+        for (var i = 0; i < 100; i++)
         {
             var parts = testString.Split(',');
             result.SplitOps += parts.Length;
@@ -54,7 +54,7 @@ public class StringBenchmark : IBenchmark
         // 4. String joining operations
         var words = Enumerable.Range(0, scale / 100).Select(i => $"word_{i}").ToArray();
 
-        for (int i = 0; i < 100; i++)
+        for (var i = 0; i < 100; i++)
         {
             var joined = string.Join("|", words);
             result.JoinOps++;
@@ -64,7 +64,7 @@ public class StringBenchmark : IBenchmark
         var searchText = string.Join(" ",
             Enumerable.Range(0, 1000).Select(i => $"Lorem ipsum dolor sit amet word_{i} consectetur"));
 
-        for (int i = 0; i < scale / 10; i++)
+        for (var i = 0; i < scale / 10; i++)
         {
             var index = searchText.IndexOf($"word_{i % 1000}", StringComparison.Ordinal);
             var contains = searchText.Contains($"word_{i % 1000}", StringComparison.Ordinal);
@@ -72,7 +72,7 @@ public class StringBenchmark : IBenchmark
         }
 
         // 6. String formatting operations
-        for (int i = 0; i < scale; i++)
+        for (var i = 0; i < scale; i++)
         {
             var formatted1 = string.Format("User {0}: {1} - Score: {2:F2}", i, $"Name_{i}", i * 1.5);
             var formatted2 = $"User {i}: Name_{i} - Score: {i * 1.5:F2}";
@@ -96,7 +96,7 @@ public class StringBenchmark : IBenchmark
         // 8. Substring operations
         var longString = string.Join("", Enumerable.Range(0, 10000).Select(i => $"segment_{i}_"));
 
-        for (int i = 0; i < scale / 10; i++)
+        for (var i = 0; i < scale / 10; i++)
         {
             var start = (i * 13) % (longString.Length - 20);
             var sub = longString.Substring(start, 20);
@@ -106,7 +106,7 @@ public class StringBenchmark : IBenchmark
         // 9. String replacement operations
         var replaceText = string.Join(" ", Enumerable.Range(0, 1000).Select(i => $"test demo sample word_{i}"));
 
-        for (int i = 0; i < scale / 10; i++)
+        for (var i = 0; i < scale / 10; i++)
         {
             var replaced = replaceText.Replace("test", "TEST", StringComparison.Ordinal)
                 .Replace("demo", "DEMO", StringComparison.Ordinal)

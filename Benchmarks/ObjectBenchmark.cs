@@ -68,7 +68,7 @@ public class ObjectBenchmark : IBenchmark
         var result = new ObjectResult();
 
         // 1. Simple object creation and destruction
-        for (int i = 0; i < scale; i++)
+        for (var i = 0; i < scale; i++)
         {
             var obj = new SimpleObject
             {
@@ -82,7 +82,7 @@ public class ObjectBenchmark : IBenchmark
         }
 
         // 2. Complex object creation with nested structures
-        for (int i = 0; i < scale / 10; i++)
+        for (var i = 0; i < scale / 10; i++)
         {
             var obj = new ComplexObject
             {
@@ -108,7 +108,7 @@ public class ObjectBenchmark : IBenchmark
         }
 
         // 3. Deep inheritance hierarchy
-        for (int i = 0; i < scale / 10; i++)
+        for (var i = 0; i < scale / 10; i++)
         {
             var obj = new DeepDerivedEntity
             {
@@ -127,10 +127,10 @@ public class ObjectBenchmark : IBenchmark
         }
 
         // 4. Arrays of objects
-        for (int i = 0; i < scale / 100; i++)
+        for (var i = 0; i < scale / 100; i++)
         {
             var array = new SimpleObject[100];
-            for (int j = 0; j < 100; j++)
+            for (var j = 0; j < 100; j++)
             {
                 array[j] = new()
                 {
@@ -144,13 +144,13 @@ public class ObjectBenchmark : IBenchmark
         }
 
         // 5. Nested collections of objects
-        for (int i = 0; i < scale / 50; i++)
+        for (var i = 0; i < scale / 50; i++)
         {
             var list = new List<List<ComplexObject>>();
-            for (int j = 0; j < 10; j++)
+            for (var j = 0; j < 10; j++)
             {
                 var innerList = new List<ComplexObject>();
-                for (int k = 0; k < 10; k++)
+                for (var k = 0; k < 10; k++)
                 {
                     innerList.Add(new()
                     {
@@ -176,7 +176,7 @@ public class ObjectBenchmark : IBenchmark
             Created = DateTime.Now
         };
 
-        for (int i = 0; i < scale / 10; i++)
+        for (var i = 0; i < scale / 10; i++)
         {
             var clone = new ComplexObject
             {
@@ -190,14 +190,14 @@ public class ObjectBenchmark : IBenchmark
         }
 
         // 7. Object graph creation (tree structure)
-        for (int i = 0; i < scale / 100; i++)
+        for (var i = 0; i < scale / 100; i++)
         {
             var root = CreateTree(5, i * 100); // Depth of 5
             result.ObjectGraphs++;
         }
 
         // 8. Object with circular references (testing GC)
-        for (int i = 0; i < scale / 20; i++)
+        for (var i = 0; i < scale / 20; i++)
         {
             var node1 = new Node { Value = i, Data = $"Node1_{i}" };
             var node2 = new Node { Value = i + 1, Data = $"Node2_{i}" };

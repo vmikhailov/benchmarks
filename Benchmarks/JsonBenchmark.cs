@@ -84,7 +84,7 @@ public class JsonBenchmark : IBenchmark
         var random = new Random(42); // Fixed seed for consistency
         var languages = new[] { "en", "es", "fr", "de", "ja" };
 
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
             result.Add(new()
             {
