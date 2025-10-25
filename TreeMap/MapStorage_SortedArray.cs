@@ -44,7 +44,7 @@ public class MapStorage_SortedArray : IMapStorage
     private readonly int _maxCoordinate;
 
     /// <summary>
-    /// Initializes a new sorted array-based map storage.
+    /// Initializes a new sorted-array-based map storage.
     /// </summary>
     /// <param name="maxCoordinate">Maximum valid coordinate (default: 1,000,000)</param>
     public MapStorage_SortedArray(int maxCoordinate = 1_000_000)
@@ -64,47 +64,41 @@ public class MapStorage_SortedArray : IMapStorage
     public bool Add(int x, int y, string label)
     {
         ValidateCoordinates(x, y);
-        if (label == null)
-            throw new ArgumentNullException(nameof(label));
+        ArgumentNullException.ThrowIfNull(label);
 
         var key = ComputeKey(x, y);
 
-        // Binary search to find insertion point or existing entry
-        var index = BinarySearchForKey(key);
+        // Binary search to find the first occurrence or insertion point
+        var startIndex = BinarySearchFirstOccurrence(key);
 
-        if (index >= 0)
+        if (startIndex >= 0)
         {
             // Key exists, check for exact coordinate match
-            var startIndex = index;
-
-            // Scan backwards to find first entry with this key
-            while (startIndex > 0 && _entries[startIndex - 1].Key == key)
-                startIndex--;
-
             // Scan forward through all entries with this key
             for (var i = startIndex; i < _entries.Count && _entries[i].Key == key; i++)
             {
                 if (_entries[i].X == x && _entries[i].Y == y)
                 {
                     // Update existing entry
-                    _entries[i] = new Entry(key, x, y, label);
+                    _entries[i] = new(key, x, y, label);
                     return false;
                 }
             }
 
-            // Add new entry after existing ones with same key
+            // Add new entry after existing ones with the same key
             var insertIndex = startIndex;
             while (insertIndex < _entries.Count && _entries[insertIndex].Key == key)
                 insertIndex++;
 
-            _entries.Insert(insertIndex, new Entry(key, x, y, label));
+            _entries.Insert(insertIndex, new(key, x, y, label));
             return true;
         }
         else
         {
-            // Key doesn't exist, insert at the correct position
+            // Key doesn't exist, find insertion point using standard binary search
+            var index = BinarySearchForKey(key);
             var insertIndex = ~index; // Bitwise complement gives insertion point
-            _entries.Insert(insertIndex, new Entry(key, x, y, label));
+            _entries.Insert(insertIndex, new(key, x, y, label));
             return true;
         }
     }
@@ -114,15 +108,10 @@ public class MapStorage_SortedArray : IMapStorage
         ValidateCoordinates(x, y);
 
         var key = ComputeKey(x, y);
-        var index = BinarySearchForKey(key);
+        var startIndex = BinarySearchFirstOccurrence(key);
 
-        if (index < 0)
+        if (startIndex < 0)
             return null;
-
-        // Scan backwards to find first entry with this key
-        var startIndex = index;
-        while (startIndex > 0 && _entries[startIndex - 1].Key == key)
-            startIndex--;
 
         // Search through all entries with this key
         for (var i = startIndex; i < _entries.Count && _entries[i].Key == key; i++)
@@ -145,17 +134,13 @@ public class MapStorage_SortedArray : IMapStorage
         ValidateCoordinates(x, y);
 
         var key = ComputeKey(x, y);
-        var index = BinarySearchForKey(key);
+        var startIndex = BinarySearchFirstOccurrence(key);
 
-        if (index < 0)
+        if (startIndex < 0)
             return false;
 
-        // Scan backwards to find first entry with this key
-        var startIndex = index;
-        while (startIndex > 0 && _entries[startIndex - 1].Key == key)
-            startIndex--;
 
-        // Search for exact coordinate match
+        // Search for the exact coordinate match
         for (var i = startIndex; i < _entries.Count && _entries[i].Key == key; i++)
         {
             if (_entries[i].X == x && _entries[i].Y == y)
@@ -198,7 +183,7 @@ public class MapStorage_SortedArray : IMapStorage
 
         var radiusSquared = (long)radius * radius;
 
-        // Binary search to find the first entry with key >= radiusSquared
+        // Binary search to find the first entry with the key >= radiusSquared
         var upperBoundIndex = BinarySearchUpperBound(radiusSquared);
 
         // Return all entries before the upper bound
@@ -217,7 +202,7 @@ public class MapStorage_SortedArray : IMapStorage
 
     /// <summary>
     /// Binary search to find any entry with the given key.
-    /// Returns index if found, or ~index where entry should be inserted.
+    /// Returns index if found, or ~index where the entry should be inserted.
     /// </summary>
     private int BinarySearchForKey(long key)
     {
@@ -239,6 +224,35 @@ public class MapStorage_SortedArray : IMapStorage
         }
 
         return ~left; // Return bitwise complement of insertion point
+    }
+
+    /// <summary>
+    /// Binary search to find the FIRST entry with the given key.
+    /// Returns index if found, or -1 if not found.
+    /// </summary>
+    private int BinarySearchFirstOccurrence(long key)
+    {
+        var left = 0;
+        var right = _entries.Count - 1;
+        var result = -1;
+
+        while (left <= right)
+        {
+            var mid = left + (right - left) / 2;
+            var midKey = _entries[mid].Key;
+
+            if (midKey == key)
+            {
+                result = mid;
+                right = mid - 1; // Continue searching in left half for first occurrence
+            }
+            else if (midKey < key)
+                left = mid + 1;
+            else
+                right = mid - 1;
+        }
+
+        return result;
     }
 
     /// <summary>

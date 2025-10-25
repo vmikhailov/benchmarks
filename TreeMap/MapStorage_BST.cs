@@ -58,8 +58,7 @@ public class MapStorage_BST : IMapStorage
     public bool Add(int x, int y, string label)
     {
         ValidateCoordinates(x, y);
-        if (label == null)
-            throw new ArgumentNullException(nameof(label));
+        ArgumentNullException.ThrowIfNull(label);
 
         var key = ComputeKey(x, y);
         var isNew = true;

@@ -27,6 +27,8 @@ class Program
         Console.WriteLine("\n" + new string('=', 60) + "\n");
         DemoSortedArrayImplementation();
         Console.WriteLine("\n" + new string('=', 60) + "\n");
+        DemoSortedSetImplementation();
+        Console.WriteLine("\n" + new string('=', 60) + "\n");
 
         // Advanced test data demos
         DemoAdvancedTestData();
@@ -133,10 +135,57 @@ class Program
         Console.WriteLine($"  Found {nearby.Count} labels using binary search:");
         foreach (var (x, y, label) in nearby)
         {
-            long distSq = (long)x * x + (long)y * y;
+            var distSq = (long)x * x + (long)y * y;
             Console.WriteLine($"    ({x}, {y}) → {label} (distance² = {distSq})");
         }
         Console.WriteLine("  Advantage: Binary search to range, no full scan needed!");
+    }
+
+    static void DemoSortedSetImplementation()
+    {
+        Console.WriteLine("SORTED SET IMPLEMENTATION");
+        Console.WriteLine("Data Structure: SortedSet<KeyNode> with key = x² + y²\n");
+
+        var mapStorage = new MapStorage_SortedDictionary();
+
+        // Add labels using test data generator
+        Console.WriteLine("Adding labels...");
+        foreach (var (x, y, label) in TestDataGenerator.GetBasicTestData())
+        {
+            mapStorage.Add(x, y, label);
+        }
+        Console.WriteLine($"Total labels: {mapStorage.Count}\n");
+
+        DemoCommonOperations(mapStorage);
+
+        // Show SortedSet-specific statistics
+        var stats = mapStorage.GetStatistics();
+        Console.WriteLine("\nSorted Set Statistics:");
+        Console.WriteLine($"  Tree nodes: {stats.nodes}");
+        Console.WriteLine($"  Max collisions per node: {stats.maxCollisions}");
+        Console.WriteLine($"  Total collisions: {stats.totalCollisions}");
+
+        // Demonstrate efficient radius query with GetViewBetween
+        Console.WriteLine("\nRadius Query using GetViewBetween (key advantage):");
+        mapStorage.Clear();
+
+        // Add test data
+        mapStorage.Add(10, 10, "close_1");      // distance² = 200
+        mapStorage.Add(100, 100, "close_2");    // distance² = 20000
+        mapStorage.Add(1000, 1000, "medium");   // distance² = 2000000
+        mapStorage.Add(5000, 5000, "far");      // distance² = 50000000
+
+        Console.WriteLine($"  Added 4 labels at various distances");
+        Console.WriteLine($"  Searching within radius 2000 (radius² = 4000000):");
+
+        var nearby = mapStorage.GetWithinRadius(2000).ToList();
+        Console.WriteLine($"  Found {nearby.Count} labels:");
+        foreach (var (x, y, label) in nearby)
+        {
+            var distSq = (long)x * x + (long)y * y;
+            Console.WriteLine($"    ({x}, {y}) → {label} (distance² = {distSq})");
+        }
+        Console.WriteLine("  Advantage: Balanced Red-Black tree + efficient GetViewBetween!");
     }
 
     static void DemoCommonOperations(IMapStorage mapStorage)

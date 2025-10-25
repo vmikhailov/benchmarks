@@ -39,8 +39,7 @@ public class MapStorage_Dictionary : IMapStorage
     public bool Add(int x, int y, string label)
     {
         ValidateCoordinates(x, y);
-        if (label == null)
-            throw new ArgumentNullException(nameof(label));
+        ArgumentNullException.ThrowIfNull(label);
 
         var key = (x, y);
         var isNew = !_labels.ContainsKey(key);
@@ -57,7 +56,7 @@ public class MapStorage_Dictionary : IMapStorage
     public string? Get(int x, int y)
     {
         ValidateCoordinates(x, y);
-        return _labels.TryGetValue((x, y), out var label) ? label : null;
+        return _labels.GetValueOrDefault((x, y));
     }
 
     /// <summary>
