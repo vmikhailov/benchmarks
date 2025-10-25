@@ -4,14 +4,6 @@ using BenchmarkDotNet.Order;
 
 namespace TreeMap;
 
-public enum StorageType
-{
-    Dictionary,
-    BST,
-    SortedArray,
-    SortedDictionary
-}
-
 /// <summary>
 /// Benchmarks comparing different implementations of IMapStorage.
 /// Tests various operations with different data sizes.
@@ -28,8 +20,17 @@ public class MapStorageBenchmarks
     private List<Entry> _testData = null!;
     private List<(int x, int y)> _lookupCoordinates = null!;
 
-    [Params(StorageType.Dictionary, StorageType.BST, StorageType.SortedArray, StorageType.SortedDictionary)]
-    public StorageType Storage { get; set; }
+    [ParamsSource(nameof(StorageTypes))]
+    public IMapStorageFactory Storage { get; set; } = null!;
+
+    public static IMapStorageFactory[] StorageTypes =>
+    [
+        new StorageFactory<MapStorage_BST>("BST"),
+        new StorageFactory<MapStorage_Dictionary>("Dictionary"),
+        new StorageFactory<MapStorage_SortedArray>("SortedArray"),
+        new StorageFactory<MapStorage_SortedDictionary>("SortedDict"),
+        new StorageFactory<MapStorage_SortedDictionary2>("SortedDict2"),
+    ];
 
     [Params(1000)]
     public int LabelCount { get; set; }
@@ -56,20 +57,14 @@ public class MapStorageBenchmarks
 
         // Pre-populate storage
         _prePopulatedStorage = CreateStorage();
+
         foreach (var entry in _testData)
         {
             _prePopulatedStorage.Add(entry);
         }
     }
 
-    private IMapStorage CreateStorage() => Storage switch
-    {
-        StorageType.Dictionary => new MapStorage_Dictionary(),
-        StorageType.BST => new MapStorage_BST(),
-        StorageType.SortedArray => new MapStorage_SortedArray(),
-        StorageType.SortedDictionary => new MapStorage_SortedDictionary(),
-        _ => throw new ArgumentOutOfRangeException()
-    };
+    private IMapStorage CreateStorage() => Storage.Create();
 
     [Benchmark]
     [BenchmarkCategory("Add")]
@@ -134,81 +129,6 @@ public class MapStorageBenchmarks
         foreach (var entry in _testData.Take(25))
         {
             storage.Remove(entry.X, entry.Y);
-        }
-    }
-}
-
-/// <summary>
-/// Benchmarks specifically for collision-heavy scenarios.
-/// </summary>
-[MemoryDiagnoser]
-[RankColumn]
-[GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByParams)]
-[HideColumns("Error", "StdDev")]
-public class CollisionBenchmarks
-{
-    private List<Entry> _collisionData = null!;
-
-    [Params(StorageType.Dictionary, StorageType.BST, StorageType.SortedArray, StorageType.SortedDictionary)]
-    public StorageType Storage { get; set; }
-
-    [GlobalSetup]
-    public void Setup()
-    {
-        // Generate data that causes collisions in BST (x² + y² = same value)
-        _collisionData = new();
-
-        // Generate Pythagorean triples and their multiples
-        var triples = new[]
-        {
-            (3, 4, 5), // 3² + 4² = 25
-            (5, 12, 13), // 5² + 12² = 169
-            (8, 15, 17), // 8² + 15² = 289
-            (7, 24, 25), // 7² + 24² = 625
-        };
-
-        var counter = 0;
-
-        foreach (var (a, b, _) in triples)
-        {
-            for (var multiplier = 1; multiplier <= 10; multiplier++)
-            {
-                var x = a * multiplier;
-                var y = b * multiplier;
-
-                if (x < 1_000_000 && y < 1_000_000)
-                {
-                    _collisionData.Add(new Entry(x, y, $"label_{counter++}"));
-                    _collisionData.Add(new Entry(y, x, $"label_{counter++}")); // Swap for collision
-                }
-            }
-        }
-    }
-
-    private IMapStorage CreateStorage() => Storage switch
-    {
-        StorageType.Dictionary => new MapStorage_Dictionary(),
-        StorageType.BST => new MapStorage_BST(),
-        StorageType.SortedArray => new MapStorage_SortedArray(),
-        StorageType.SortedDictionary => new MapStorage_SortedDictionary(),
-        _ => throw new ArgumentOutOfRangeException()
-    };
-
-    [Benchmark]
-    [BenchmarkCategory("Collisions")]
-    public void WithCollisions()
-    {
-        var storage = CreateStorage();
-
-        foreach (var entry in _collisionData)
-        {
-            storage.Add(entry);
-        }
-
-        // Retrieve all
-        foreach (var entry in _collisionData)
-        {
-            storage.Get(entry.X, entry.Y);
         }
     }
 }

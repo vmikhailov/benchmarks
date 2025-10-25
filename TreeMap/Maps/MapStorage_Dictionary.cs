@@ -21,10 +21,14 @@ public class MapStorage_Dictionary : IMapStorage
     /// Initializes a new map storage.
     /// </summary>
     /// <param name="maxCoordinate">Maximum valid coordinate (default: 1,000,000)</param>
-    public MapStorage_Dictionary(int maxCoordinate = 1_000_000)
+    public MapStorage_Dictionary(int maxCoordinate)
     {
         _labels = new();
         _maxCoordinate = maxCoordinate;
+    }
+
+    public MapStorage_Dictionary() : this(1_000_000)
+    {
     }
 
     /// <summary>

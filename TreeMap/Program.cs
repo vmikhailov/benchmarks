@@ -10,8 +10,31 @@ class Program
         if (args.Length > 0 && args[0].Equals("benchmark", StringComparison.OrdinalIgnoreCase))
         {
             Console.WriteLine("Running BenchmarkDotNet...\n");
-            BenchmarkRunner.Run<MapStorageBenchmarks>();
-            //BenchmarkRunner.Run<CollisionBenchmarks>();
+
+            // Check if specific benchmark class is requested
+            if (args.Length > 1)
+            {
+                switch (args[1].ToLower())
+                {
+                    case "weighted":
+                        BenchmarkRunner.Run<WeightedBenchmark>();
+                        break;
+                    case "collision":
+                        BenchmarkRunner.Run<CollisionBenchmarks>();
+                        break;
+                    case "standard":
+                        BenchmarkRunner.Run<MapStorageBenchmarks>();
+                        break;
+                    default:
+                        Console.WriteLine("Unknown benchmark type. Use: weighted, collision, or standard");
+                        break;
+                }
+            }
+            else
+            {
+                // Run all benchmarks by default
+                BenchmarkRunner.Run<WeightedBenchmark>();
+            }
             return;
         }
 

@@ -24,11 +24,15 @@ public class MapStorage_SortedDictionary : IMapStorage
     private readonly int _maxCoordinate;
     private int _count;
 
-    public MapStorage_SortedDictionary(int maxCoordinate = 1_000_000)
+    public MapStorage_SortedDictionary(int maxCoordinate)
     {
         _sortedDict = new SortedDictionary<long, List<Entry>>();
         _maxCoordinate = maxCoordinate;
         _count = 0;
+    }
+
+    public MapStorage_SortedDictionary() : this(1_000_000)
+    {
     }
 
     private long ComputeKey(int x, int y)

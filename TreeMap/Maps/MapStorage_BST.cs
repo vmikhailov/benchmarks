@@ -39,11 +39,15 @@ public class MapStorage_BST : IMapStorage
     /// Initializes a new BST-based map storage.
     /// </summary>
     /// <param name="maxCoordinate">Maximum valid coordinate (default: 1,000,000)</param>
-    public MapStorage_BST(int maxCoordinate = 1_000_000)
+    public MapStorage_BST(int maxCoordinate)
     {
         _root = null;
         _count = 0;
         _maxCoordinate = maxCoordinate;
+    }
+
+    public MapStorage_BST() : this(1_000_000)
+    {
     }
 
     /// <summary>

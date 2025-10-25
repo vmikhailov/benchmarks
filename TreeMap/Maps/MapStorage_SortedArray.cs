@@ -49,6 +49,10 @@ public class MapStorage_SortedArray : IMapStorage
         _maxCoordinate = maxCoordinate;
     }
 
+    public MapStorage_SortedArray() : this(1_000_000)
+    {
+    }
+
     /// <summary>
     /// Computes the sort key for given coordinates.
     /// </summary>
