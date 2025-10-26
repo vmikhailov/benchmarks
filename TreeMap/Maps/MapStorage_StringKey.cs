@@ -1,35 +1,37 @@
 namespace TreeMap;
 
 /// <summary>
-/// Efficient in-memory storage for labels on a sparse 2D map.
-/// Optimized for ~100-1000 labels on a 1,000,000 x 1,000,000 map.
+/// Storage implementation using string keys in format "x,y".
+/// This is a simple implementation to compare performance against tuple-keyed dictionary.
 ///
-/// Data Structure: Dictionary with (x,y) composite key
+/// Data Structure: Dictionary with string composite key "x,y"
 /// Time Complexity:
 ///   - Add: O(1) average, O(n) worst case
 ///   - Get: O(1) average, O(n) worst case
 ///   - Remove: O(1) average, O(n) worst case
 ///   - List: O(n) where n = number of labels
-/// Space Complexity: O(n) where n = number of labels
+/// Space Complexity: O(n) where n = number of labels (plus string overhead)
 /// </summary>
-public class MapStorage_Dictionary : IMapStorage
+public class MapStorage_StringKey : IMapStorage
 {
-    private readonly Dictionary<(int x, int y), Entry> _labels;
+    private readonly Dictionary<string, Entry> _labels;
     private readonly int _maxCoordinate;
 
     /// <summary>
     /// Initializes a new map storage.
     /// </summary>
     /// <param name="maxCoordinate">Maximum valid coordinate (default: 1,000,000)</param>
-    public MapStorage_Dictionary(int maxCoordinate)
+    public MapStorage_StringKey(int maxCoordinate)
     {
         _labels = new();
         _maxCoordinate = maxCoordinate;
     }
 
-    public MapStorage_Dictionary() : this(1_000_000)
+    public MapStorage_StringKey() : this(1_000_000)
     {
     }
+
+    private static string CreateKey(int x, int y) => $"{x},{y}";
 
     /// <summary>
     /// Adds or updates a label at the specified coordinates.
@@ -41,7 +43,7 @@ public class MapStorage_Dictionary : IMapStorage
     {
         ValidateCoordinates(entry.X, entry.Y);
 
-        var key = (entry.X, entry.Y);
+        var key = CreateKey(entry.X, entry.Y);
         var isNew = !_labels.ContainsKey(key);
         _labels[key] = entry;
         return isNew;
@@ -56,7 +58,7 @@ public class MapStorage_Dictionary : IMapStorage
     public Entry? Get(int x, int y)
     {
         ValidateCoordinates(x, y);
-        return _labels.GetValueOrDefault((x, y));
+        return _labels.GetValueOrDefault(CreateKey(x, y));
     }
 
     /// <summary>
@@ -69,7 +71,7 @@ public class MapStorage_Dictionary : IMapStorage
     public bool TryGet(int x, int y, out Entry? entry)
     {
         ValidateCoordinates(x, y);
-        return _labels.TryGetValue((x, y), out entry);
+        return _labels.TryGetValue(CreateKey(x, y), out entry);
     }
 
     /// <summary>
@@ -81,7 +83,7 @@ public class MapStorage_Dictionary : IMapStorage
     public bool Remove(int x, int y)
     {
         ValidateCoordinates(x, y);
-        return _labels.Remove((x, y));
+        return _labels.Remove(CreateKey(x, y));
     }
 
     /// <summary>
@@ -90,7 +92,7 @@ public class MapStorage_Dictionary : IMapStorage
     public bool Contains(int x, int y)
     {
         ValidateCoordinates(x, y);
-        return _labels.ContainsKey((x, y));
+        return _labels.ContainsKey(CreateKey(x, y));
     }
 
     /// <summary>
@@ -196,3 +198,4 @@ public class MapStorage_Dictionary : IMapStorage
             throw new ArgumentOutOfRangeException(nameof(y), $"Y must be between 0 and {_maxCoordinate - 1}");
     }
 }
+

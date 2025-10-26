@@ -14,7 +14,7 @@ namespace TreeMap;
 [RankColumn]
 [HideColumns("Error", "StdDev", "Median")]
 [SimpleJob(warmupCount: 1, iterationCount: 3)]
-public class MapStorageBenchmarks
+public class StandardBenchmarks
 {
     private IMapStorage _prePopulatedStorage = null!;
     private List<Entry> _testData = null!;
@@ -26,10 +26,10 @@ public class MapStorageBenchmarks
     public static IMapStorageFactory[] StorageTypes =>
     [
         new StorageFactory<MapStorage_BST>("BST"),
-        new StorageFactory<MapStorage_Dictionary>("Dictionary"),
+        new StorageFactory<MapStorage_Dictionary>("DictLongKey"),
         new StorageFactory<MapStorage_SortedArray>("SortedArray"),
         new StorageFactory<MapStorage_SortedDictionary>("SortedDict"),
-        new StorageFactory<MapStorage_SortedDictionary2>("SortedDict2"),
+        new StorageFactory<MapStorage_StringKey>("DictStringKey"),
     ];
 
     [Params(1000)]
@@ -110,6 +110,19 @@ public class MapStorageBenchmarks
         {
             var r = Random.Shared.Next(1_000_000);
             var result = _prePopulatedStorage.GetWithinRadius(r).ToList();
+        }
+    }
+
+    [Benchmark]
+    [BenchmarkCategory("GetWithinRadiusFromCenter")]
+    public void GetWithinRadiusFromCenter()
+    {
+        for (var i = 0; i < 100; i++)
+        {
+            var centerX = Random.Shared.Next(1_000_000);
+            var centerY = Random.Shared.Next(1_000_000);
+            var r = Random.Shared.Next(100_000, 500_000);
+            var result = _prePopulatedStorage.GetWithinRadius(centerX, centerY, r).ToList();
         }
     }
 

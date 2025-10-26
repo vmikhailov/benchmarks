@@ -82,7 +82,7 @@ public class MapStorage_BST : IMapStorage
         return isNew;
     }
 
-    private BSTNode AddRecursive(BSTNode node, long key, Entry entry, ref bool isNew)
+    private BSTNode AddRecursive(BSTNode? node, long key, Entry entry, ref bool isNew)
     {
         if (node == null)
         {
@@ -127,17 +127,7 @@ public class MapStorage_BST : IMapStorage
         var key = ComputeKey(x, y);
         var node = FindNode(_root, key);
 
-        if (node == null)
-            return null;
-
-        // Search through collision list
-        foreach (var entry in node.Entries)
-        {
-            if (entry.X == x && entry.Y == y)
-                return entry;
-        }
-
-        return null;
+        return node?.Entries.FirstOrDefault(entry => entry.X == x && entry.Y == y);
     }
 
     public bool TryGet(int x, int y, out Entry? entry)
@@ -148,15 +138,22 @@ public class MapStorage_BST : IMapStorage
 
     private BSTNode? FindNode(BSTNode? node, long key)
     {
-        if (node == null)
-            return null;
+        while (true)
+        {
+            if (node == null)
+                return null;
 
-        if (key < node.Key)
-            return FindNode(node.Left, key);
-        else if (key > node.Key)
-            return FindNode(node.Right, key);
-        else
-            return node;
+            if (key < node.Key)
+            {
+                node = node.Left;
+            }
+            else if (key > node.Key)
+            {
+                node = node.Right;
+            }
+            else
+                return node;
+        }
     }
 
     public bool Remove(int x, int y)
@@ -181,12 +178,10 @@ public class MapStorage_BST : IMapStorage
         if (key < node.Key)
         {
             node.Left = RemoveRecursive(node.Left, key, x, y, ref removed);
-            return node;
         }
         else if (key > node.Key)
         {
             node.Right = RemoveRecursive(node.Right, key, x, y, ref removed);
-            return node;
         }
         else // key == node.Key
         {
@@ -221,9 +216,9 @@ public class MapStorage_BST : IMapStorage
             node.Key = successor.Key;
             node.Entries = new(successor.Entries);
             node.Right = RemoveMin(node.Right);
-
-            return node;
         }
+
+        return node;
     }
 
     private BSTNode FindMin(BSTNode node)
@@ -257,12 +252,15 @@ public class MapStorage_BST : IMapStorage
 
     private void InOrderTraversal(BSTNode? node, List<Entry> result)
     {
-        if (node == null)
-            return;
+        while (true)
+        {
+            if (node == null)
+                return;
 
-        InOrderTraversal(node.Left, result);
-        result.AddRange(node.Entries);
-        InOrderTraversal(node.Right, result);
+            InOrderTraversal(node.Left, result);
+            result.AddRange(node.Entries);
+            node = node.Right;
+        }
     }
 
     public Entry[] GetInRegion(int minX, int minY, int maxX, int maxY)
@@ -274,18 +272,32 @@ public class MapStorage_BST : IMapStorage
             throw new ArgumentException("Invalid region bounds");
 
         var result = new List<Entry>();
-        var allEntries = ListAll();
 
-        foreach (var entry in allEntries)
-        {
-            if (entry.X >= minX && entry.X <= maxX &&
-                entry.Y >= minY && entry.Y <= maxY)
-            {
-                result.Add(entry);
-            }
-        }
+        // Traverse BST and check entries directly
+        GetInRegionRecursive(_root, minX, minY, maxX, maxY, result);
 
         return result.ToArray();
+    }
+
+    private void GetInRegionRecursive(BSTNode? node, int minX, int minY, int maxX, int maxY, List<Entry> result)
+    {
+        while (true)
+        {
+            if (node == null)
+                return;
+
+            // Traverse entire tree since BST key (x²+y²) doesn't correlate with rectangular regions
+            GetInRegionRecursive(node.Left, minX, minY, maxX, maxY, result);
+
+            // Check all entries in current node
+            var entriesInRegion = node.Entries.Where(entry =>
+                entry.X >= minX && entry.X <= maxX &&
+                entry.Y >= minY && entry.Y <= maxY);
+
+            result.AddRange(entriesInRegion);
+
+            node = node.Right;
+        }
     }
 
     public Entry[] GetWithinRadius(int radius)
@@ -320,6 +332,31 @@ public class MapStorage_BST : IMapStorage
             GetWithinRadiusRecursive(node.Right, radiusSquared, result);
         }
         // If node.Key >= radiusSquared, don't traverse right (all keys will be too large)
+    }
+
+    public Entry[] GetWithinRadius(int centerX, int centerY, int radius)
+    {
+        ValidateCoordinates(centerX, centerY);
+        if (radius < 0)
+            throw new ArgumentOutOfRangeException(nameof(radius), "Radius must be non-negative");
+
+        var radiusSquared = (long)radius * radius;
+        var result = new List<Entry>();
+
+        // For arbitrary center points, we can't use BST optimization
+        // Must check all entries
+        var allEntries = ListAll();
+        foreach (var entry in allEntries)
+        {
+            long dx = entry.X - centerX;
+            long dy = entry.Y - centerY;
+            if (dx * dx + dy * dy <= radiusSquared)
+            {
+                result.Add(entry);
+            }
+        }
+
+        return result.ToArray();
     }
 
     public void Clear()

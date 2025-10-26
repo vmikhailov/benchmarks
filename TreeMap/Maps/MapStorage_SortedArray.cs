@@ -194,6 +194,30 @@ public class MapStorage_SortedArray : IMapStorage
         return result;
     }
 
+    public Entry[] GetWithinRadius(int centerX, int centerY, int radius)
+    {
+        ValidateCoordinates(centerX, centerY);
+        if (radius < 0)
+            throw new ArgumentOutOfRangeException(nameof(radius), "Radius must be non-negative");
+
+        var radiusSquared = (long)radius * radius;
+        var result = new List<Entry>();
+
+        // Cannot optimize with binary search for arbitrary center points
+        // Must check all entries
+        foreach (var item in _entries)
+        {
+            long dx = item.Entry.X - centerX;
+            long dy = item.Entry.Y - centerY;
+            if (dx * dx + dy * dy <= radiusSquared)
+            {
+                result.Add(item.Entry);
+            }
+        }
+
+        return result.ToArray();
+    }
+
     public void Clear()
     {
         _entries.Clear();

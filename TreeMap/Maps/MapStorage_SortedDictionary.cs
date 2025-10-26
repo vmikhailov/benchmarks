@@ -203,6 +203,33 @@ public class MapStorage_SortedDictionary : IMapStorage
         return result.ToArray();
     }
 
+    public Entry[] GetWithinRadius(int centerX, int centerY, int radius)
+    {
+        ValidateCoordinates(centerX, centerY);
+        if (radius < 0)
+            throw new ArgumentOutOfRangeException(nameof(radius), "Radius must be non-negative");
+
+        var radiusSquared = (long)radius * radius;
+        var result = new List<Entry>();
+
+        // Cannot optimize for arbitrary center points
+        // Must check all entries
+        foreach (var kvp in _sortedDict)
+        {
+            foreach (var entry in kvp.Value)
+            {
+                long dx = entry.X - centerX;
+                long dy = entry.Y - centerY;
+                if (dx * dx + dy * dy <= radiusSquared)
+                {
+                    result.Add(entry);
+                }
+            }
+        }
+
+        return result.ToArray();
+    }
+
     public void Clear()
     {
         _sortedDict.Clear();

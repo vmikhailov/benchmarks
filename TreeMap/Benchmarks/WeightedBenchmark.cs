@@ -11,24 +11,25 @@ namespace TreeMap;
 [RankColumn]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
 [HideColumns("Error", "StdDev")]
-[SimpleJob(warmupCount: 1, iterationCount: 5)]
+//[SimpleJob(warmupCount: 1, iterationCount: 5)]
 public class WeightedBenchmark
 {
     private List<Entry> _addData = null!;
     private List<(int x, int y)> _getCoordinates = null!;
     private List<(int minX, int minY, int maxX, int maxY)> _regions = null!;
     private List<int> _radii = null!;
+    private List<(int x, int y, int radius)> _radiiFromCenter = null!;
 
     [ParamsSource(nameof(StorageTypes))]
     public IMapStorageFactory Storage { get; set; } = null!;
 
     public static IMapStorageFactory[] StorageTypes =>
     [
-        new StorageFactory<MapStorage_Dictionary>("Dictionary"),
         new StorageFactory<MapStorage_BST>("BST"),
+        new StorageFactory<MapStorage_Dictionary>("DictLongKey"),
         new StorageFactory<MapStorage_SortedArray>("SortedArray"),
         new StorageFactory<MapStorage_SortedDictionary>("SortedDict"),
-        //new StorageFactory<MapStorage_SortedDictionary2>("SortedDict2")
+        new StorageFactory<MapStorage_StringKey>("DictStringKey"),
     ];
 
     [GlobalSetup]
@@ -76,6 +77,16 @@ public class WeightedBenchmark
         {
             _radii.Add(random.Next(100_000, 800_000));
         }
+
+        // Prepare 10k center points with radii for GetWithinRadius(x, y, r)
+        _radiiFromCenter = new();
+        for (var i = 0; i < 50_000; i++)
+        {
+            var centerX = random.Next(1_000_000);
+            var centerY = random.Next(1_000_000);
+            var radius = random.Next(50_000, 300_000);
+            _radiiFromCenter.Add((centerX, centerY, radius));
+        }
     }
 
     [Benchmark]
@@ -102,7 +113,7 @@ public class WeightedBenchmark
         }
 
         // 10k GetInRegion
-        foreach (var (minX, minY, maxX, maxY) in _regions)
+        foreach (var (minX, minY, maxX, maxY) in _regions.Take(1000))
         {
             var result = storage.GetInRegion(minX, minY, maxX, maxY);
         }
@@ -111,6 +122,12 @@ public class WeightedBenchmark
         foreach (var radius in _radii)
         {
             var result = storage.GetWithinRadius(radius);
+        }
+
+        // 10k GetWithinRadius from center point
+        foreach (var (x, y, radius) in _radiiFromCenter)
+        {
+            var result = storage.GetWithinRadius(x, y, radius);
         }
     }
 }

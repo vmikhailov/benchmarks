@@ -67,6 +67,16 @@ public interface IMapStorage
     Entry[] GetWithinRadius(int radius);
 
     /// <summary>
+    /// Returns all labels within a circular distance R from a center point (centerX, centerY).
+    /// Returns labels where (x - centerX)² + (y - centerY)² &lt;= R².
+    /// </summary>
+    /// <param name="centerX">X coordinate of the center point</param>
+    /// <param name="centerY">Y coordinate of the center point</param>
+    /// <param name="radius">The radius from the center point</param>
+    /// <returns>Array of entries within the circular region</returns>
+    Entry[] GetWithinRadius(int centerX, int centerY, int radius);
+
+    /// <summary>
     /// Clears all labels from the map.
     /// </summary>
     void Clear();
