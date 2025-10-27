@@ -53,8 +53,8 @@ public class CollisionBenchmarks
 
                 if (x < 1_000_000 && y < 1_000_000)
                 {
-                    _collisionData.Add(new Entry(x, y, $"label_{counter++}"));
-                    _collisionData.Add(new Entry(y, x, $"label_{counter++}")); // Swap for collision
+                    _collisionData.Add(new(x, y, $"label_{counter++}"));
+                    _collisionData.Add(new(y, x, $"label_{counter++}")); // Swap for collision
                 }
             }
         }

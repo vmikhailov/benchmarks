@@ -15,9 +15,9 @@ public static class TiledTest
 
         // Add some test entries
         Console.WriteLine("Adding test entries...");
-        storage.Add(new Entry(10000, 10000, "Test1"));
-        storage.Add(new Entry(500000, 500000, "Test2"));
-        storage.Add(new Entry(100, 100, "Test3"));
+        storage.Add(new(10000, 10000, "Test1"));
+        storage.Add(new(500000, 500000, "Test2"));
+        storage.Add(new(100, 100, "Test3"));
         Console.WriteLine($"Added {storage.Count} entries\n");
 
         // Test with large radius (this was causing the hang)
@@ -56,7 +56,7 @@ public static class TiledTest
         var stopwatch = Stopwatch.StartNew();
         for (int i = 0; i < 1000; i++)
         {
-            storage.Add(new Entry(random.Next(1_000_000), random.Next(1_000_000), $"Label{i}"));
+            storage.Add(new(random.Next(1_000_000), random.Next(1_000_000), $"Label{i}"));
         }
         stopwatch.Stop();
         Console.WriteLine($"  Completed in {stopwatch.ElapsedMilliseconds}ms\n");

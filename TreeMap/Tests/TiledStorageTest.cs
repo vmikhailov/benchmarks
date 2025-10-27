@@ -58,11 +58,11 @@ public class TiledStorageTest
         var storage = new MapStorage_Tiled();
 
         // Add entries in different tiles
-        storage.Add(new Entry(1000, 1000, "A"));
-        storage.Add(new Entry(2000, 2000, "B"));
-        storage.Add(new Entry(5000, 5000, "C"));
-        storage.Add(new Entry(10000, 10000, "D"));
-        storage.Add(new Entry(100000, 100000, "E"));
+        storage.Add(new(1000, 1000, "A"));
+        storage.Add(new(2000, 2000, "B"));
+        storage.Add(new(5000, 5000, "C"));
+        storage.Add(new(10000, 10000, "D"));
+        storage.Add(new(100000, 100000, "E"));
 
         // Test region that includes some entries
         var result = storage.GetInRegion(0, 0, 6000, 6000);
@@ -88,9 +88,9 @@ public class TiledStorageTest
         var storage = new MapStorage_Tiled();
 
         // Add entries at various distances from origin
-        storage.Add(new Entry(100, 100, "Near"));
-        storage.Add(new Entry(1000, 1000, "Mid"));
-        storage.Add(new Entry(10000, 10000, "Far"));
+        storage.Add(new(100, 100, "Near"));
+        storage.Add(new(1000, 1000, "Mid"));
+        storage.Add(new(10000, 10000, "Far"));
 
         // Small radius - should find one
         var result = storage.GetWithinRadius(200);
@@ -114,11 +114,11 @@ public class TiledStorageTest
         var storage = new MapStorage_Tiled();
 
         // Add entries around a center point (10000, 10000)
-        storage.Add(new Entry(10000, 10000, "Center"));
-        storage.Add(new Entry(10500, 10500, "Close"));
-        storage.Add(new Entry(12000, 12000, "Medium"));
-        storage.Add(new Entry(15000, 15000, "Far"));
-        storage.Add(new Entry(100, 100, "VeryFar"));
+        storage.Add(new(10000, 10000, "Center"));
+        storage.Add(new(10500, 10500, "Close"));
+        storage.Add(new(12000, 12000, "Medium"));
+        storage.Add(new(15000, 15000, "Far"));
+        storage.Add(new(100, 100, "VeryFar"));
 
         // Small radius from center
         var result = storage.GetWithinRadius(10000, 10000, 1000);
@@ -141,7 +141,7 @@ public class TiledStorageTest
     {
         if (!condition)
         {
-            throw new Exception($"Assertion failed: {message}");
+            throw new($"Assertion failed: {message}");
         }
     }
 }

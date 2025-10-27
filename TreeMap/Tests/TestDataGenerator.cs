@@ -10,10 +10,10 @@ public static class TestDataGenerator
     /// </summary>
     public static IEnumerable<Entry> GetBasicTestData()
     {
-        yield return new Entry(1, 1, "label1");
-        yield return new Entry(200, 3400, "label2");
-        yield return new Entry(999999, 999999, "corner");
-        yield return new Entry(500000, 500000, "center");
+        yield return new(1, 1, "label1");
+        yield return new(200, 3400, "label2");
+        yield return new(999999, 999999, "corner");
+        yield return new(500000, 500000, "center");
     }
 
     /// <summary>
@@ -27,7 +27,7 @@ public static class TestDataGenerator
         int maxCoordinate = 1_000_000, 
         int? seed = null)
     {
-        var random = seed.HasValue ? new Random(seed.Value) : new Random();
+        var random = seed.HasValue ? new(seed.Value) : new Random();
 
         for (var i = 0; i < count; i++)
         {
@@ -35,7 +35,7 @@ public static class TestDataGenerator
             var y = random.Next(0, maxCoordinate);
             var label = $"random_label_{i}";
 
-            yield return new Entry(x, y, label);
+            yield return new(x, y, label);
         }
     }
 
@@ -58,7 +58,7 @@ public static class TestDataGenerator
                 var y = j * step;
                 var label = $"grid_{i}_{j}";
 
-                yield return new Entry(x, y, label);
+                yield return new(x, y, label);
             }
         }
     }
@@ -71,19 +71,19 @@ public static class TestDataGenerator
         var max = maxCoordinate - 1;
 
         // Corners
-        yield return new Entry(0, 0, "corner_bottom_left");
-        yield return new Entry(max, 0, "corner_bottom_right");
-        yield return new Entry(0, max, "corner_top_left");
-        yield return new Entry(max, max, "corner_top_right");
+        yield return new(0, 0, "corner_bottom_left");
+        yield return new(max, 0, "corner_bottom_right");
+        yield return new(0, max, "corner_top_left");
+        yield return new(max, max, "corner_top_right");
 
         // Centers of edges
-        yield return new Entry(max / 2, 0, "edge_bottom");
-        yield return new Entry(max / 2, max, "edge_top");
-        yield return new Entry(0, max / 2, "edge_left");
-        yield return new Entry(max, max / 2, "edge_right");
+        yield return new(max / 2, 0, "edge_bottom");
+        yield return new(max / 2, max, "edge_top");
+        yield return new(0, max / 2, "edge_left");
+        yield return new(max, max / 2, "edge_right");
 
         // Center
-        yield return new Entry(max / 2, max / 2, "center");
+        yield return new(max / 2, max / 2, "center");
     }
 
     /// <summary>
@@ -96,7 +96,7 @@ public static class TestDataGenerator
         int clusterRadius,
         int? seed = null)
     {
-        var random = seed.HasValue ? new Random(seed.Value) : new Random();
+        var random = seed.HasValue ? new(seed.Value) : new Random();
 
         for (var i = 0; i < count; i++)
         {
@@ -111,7 +111,7 @@ public static class TestDataGenerator
             
             var label = $"cluster_{i}";
 
-            yield return new Entry(x, y, label);
+            yield return new(x, y, label);
         }
     }
 

@@ -40,6 +40,11 @@ public static class TestRunner
                 RunTiledTest(args);
                 break;
 
+            case "dynamictiled":
+            case "dynamic":
+                RunDynamicTiledTest(args);
+                break;
+
             case "all":
                 RunAllTests();
                 break;
@@ -88,6 +93,43 @@ public static class TestRunner
         }
     }
 
+    private static void RunDynamicTiledTest(string[] args)
+    {
+        // Parse optional capacity parameter: "test dynamic 64" or "test dynamic 64 perf"
+        int capacity = 64; // default
+        bool runPerformance = false;
+
+        if (args.Length > 2)
+        {
+            if (int.TryParse(args[2], out var parsedCapacity))
+            {
+                capacity = parsedCapacity;
+            }
+            else if (args[2].Equals("perf", StringComparison.OrdinalIgnoreCase) ||
+                     args[2].Equals("performance", StringComparison.OrdinalIgnoreCase))
+            {
+                runPerformance = true;
+            }
+        }
+
+        if (args.Length > 3)
+        {
+            if (args[3].Equals("perf", StringComparison.OrdinalIgnoreCase) ||
+                args[3].Equals("performance", StringComparison.OrdinalIgnoreCase))
+            {
+                runPerformance = true;
+            }
+        }
+
+        DynamicTiledTest.RunTests(capacity);
+
+        if (runPerformance)
+        {
+            Console.WriteLine();
+            DynamicTiledTest.RunPerformanceTests(capacity);
+        }
+    }
+
     private static void RunAllTests()
     {
         Console.WriteLine("=== Running All Implementation Tests ===\n");
@@ -107,6 +149,9 @@ public static class TestRunner
         TiledTest.RunTests(16);
         Console.WriteLine("\n" + new string('=', 60) + "\n");
 
+        DynamicTiledTest.RunTests(64);
+        Console.WriteLine("\n" + new string('=', 60) + "\n");
+
         Console.WriteLine("✓ All tests completed successfully!");
     }
 
@@ -115,20 +160,24 @@ public static class TestRunner
         Console.WriteLine("Usage: dotnet run -- test <implementation> [options]");
         Console.WriteLine();
         Console.WriteLine("Implementations:");
-        Console.WriteLine("  dictionary, dict       - Test Dictionary implementation");
-        Console.WriteLine("  bst                    - Test Binary Search Tree implementation");
-        Console.WriteLine("  sortedarray, array     - Test Sorted Array implementation");
-        Console.WriteLine("  sorteddict             - Test Sorted Dictionary implementation");
-        Console.WriteLine("  tiled [size] [perf]    - Test Tiled implementation");
-        Console.WriteLine("                           Optional: tile size (default: 16)");
-        Console.WriteLine("                           Optional: 'perf' for performance tests");
-        Console.WriteLine("  all                    - Run all tests");
+        Console.WriteLine("  dictionary, dict         - Test Dictionary implementation");
+        Console.WriteLine("  bst                      - Test Binary Search Tree implementation");
+        Console.WriteLine("  sortedarray, array       - Test Sorted Array implementation");
+        Console.WriteLine("  sorteddict               - Test Sorted Dictionary implementation");
+        Console.WriteLine("  tiled [size] [perf]      - Test Tiled implementation");
+        Console.WriteLine("                             Optional: tile size (default: 16)");
+        Console.WriteLine("                             Optional: 'perf' for performance tests");
+        Console.WriteLine("  dynamictiled, dynamic    - Test Dynamic Tiled implementation");
+        Console.WriteLine("    [capacity] [perf]        Optional: tile capacity (default: 64)");
+        Console.WriteLine("                             Optional: 'perf' for performance tests");
+        Console.WriteLine("  all                      - Run all tests");
         Console.WriteLine();
         Console.WriteLine("Examples:");
         Console.WriteLine("  dotnet run -- test dictionary");
         Console.WriteLine("  dotnet run -- test tiled 16");
         Console.WriteLine("  dotnet run -- test tiled 16 perf");
-        Console.WriteLine("  dotnet run -- test tiled perf");
+        Console.WriteLine("  dotnet run -- test dynamic 64");
+        Console.WriteLine("  dotnet run -- test dynamic 64 perf");
         Console.WriteLine("  dotnet run -- test all");
     }
 }

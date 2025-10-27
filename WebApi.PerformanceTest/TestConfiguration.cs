@@ -19,6 +19,3 @@ public static class TestConfiguration
     public const int DefaultNumberOfRequests = 1000;
     public const int DefaultConcurrentRequests = 10;
 }
-
-public record EndpointInfo(string Name, string Path);
-

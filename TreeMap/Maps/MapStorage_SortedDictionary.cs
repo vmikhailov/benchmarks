@@ -26,7 +26,7 @@ public class MapStorage_SortedDictionary : IMapStorage
 
     public MapStorage_SortedDictionary(int maxCoordinate)
     {
-        _sortedDict = new SortedDictionary<long, List<Entry>>();
+        _sortedDict = new();
         _maxCoordinate = maxCoordinate;
         _count = 0;
     }

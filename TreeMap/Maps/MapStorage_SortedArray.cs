@@ -45,7 +45,7 @@ public class MapStorage_SortedArray : IMapStorage
     /// <param name="maxCoordinate">Maximum valid coordinate (default: 1,000,000)</param>
     public MapStorage_SortedArray(int maxCoordinate = 1_000_000)
     {
-        _entries = new List<SortedEntry>();
+        _entries = new();
         _maxCoordinate = maxCoordinate;
     }
 
