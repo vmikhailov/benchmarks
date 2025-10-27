@@ -1,0 +1,26 @@
+<Project>
+    <PropertyGroup>
+                <!-- Vars are not defined when building projects explicitly -->
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+        <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+        <SolutionDir Condition=" '$(SolutionDir)' == '' ">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), Directory.Build.props))\</SolutionDir>
+
+        <!-- Output paths -->
+        <BaseIntermediateOutputPath>$(SolutionDir).Build\obj_$(Configuration)_$(Platform)\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+        <IntermediateOutputPath>$(SolutionDir).Build\obj_$(Configuration)_$(Platform)\$(MSBuildProjectName)</IntermediateOutputPath>
+        <MSBuildProjectExtensionsPath>$(IntermediateOutputPath)\</MSBuildProjectExtensionsPath>
+        <OutputPath>$(SolutionDir).Build\bin_$(Configuration)_$(Platform)\$(MSBuildProjectName)\</OutputPath>
+        <OutDir>$(OutputPath)</OutDir>
+        <DocumentationFile>$(SolutionDir).Build\doc_$(Configuration)\$(MSBuildProjectName).xml</DocumentationFile>
+        <PublishDir>$(SolutionDir).publish\$(MSBuildProjectName)</PublishDir>
+        <UseCommonOutputDirectory>false</UseCommonOutputDirectory> <!-- This is a workaround for a bug in the SDK that causes the output path to be incorrect when building multiple projects in parallel -->
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>true</AppendRuntimeIdentifierToOutputPath>
+        <AddSyntheticProjectReferencesForSolutionDependencies>false</AddSyntheticProjectReferencesForSolutionDependencies>
+        <Deterministic>true</Deterministic>
+
+        <!-- NuGet packages generation -->
+        <PackageOutputPath>$(SolutionDir)..\..\Packages</PackageOutputPath>
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    </PropertyGroup>
+</Project>
