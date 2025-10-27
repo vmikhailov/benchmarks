@@ -1,20 +1,54 @@
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Order;
 
-namespace TreeMap;
+namespace TreeMap.Benchmarks;
 
 /// <summary>
-/// Weighted benchmark that simulates realistic usage patterns.
-/// Operations: 1000 adds, 100k gets, 1000 ListAll, 10k GetInRegion, 10k GetWithinRadius
+/// Example benchmark showing how to use custom aggregation columns.
+/// Note: Custom grouping rules are NOT supported - BenchmarkLogicalGroupRule is an enum.
+/// You can use ByMethod, ByParams, ByCategory, or ByJob from the enum.
 /// </summary>
+[Config(typeof(Config))]
 [MemoryDiagnoser]
 [RankColumn]
-[Orderer(SummaryOrderPolicy.FastestToSlowest)]
-[HideColumns("Error", "StdDev")]
-//[SimpleJob(warmupCount: 1, iterationCount: 5)]
-public class WeightedBenchmark
+public class WeightedBenchmarkWithCustomAggregation
 {
+    private class Config : ManualConfig
+    {
+        public Config()
+        {
+            // Use built-in grouping rules (enum values only):
+            // - Group by method to compare storage types across all data sizes
+            AddLogicalGroupRules(BenchmarkLogicalGroupRule.ByMethod);
+
+            // Alternative: Group by params to see each parameter combination separately
+            // AddLogicalGroupRules(BenchmarkLogicalGroupRule.ByParams);
+
+            // Add custom columns for aggregation
+            AddColumn(new GeometricMeanAcrossDataSizesColumn());
+            AddColumn(new AverageAcrossDataSizesColumn());
+
+            // Add weighted score with custom weights (e.g., small datasets matter more)
+            var weights = new Dictionary<int, double>
+            {
+                { 1000, 0.5 },    // 50% weight for small dataset
+                { 10000, 0.3 },   // 30% weight for medium dataset
+                { 50000, 0.2 }    // 20% weight for large dataset
+            };
+            AddColumn(new WeightedScoreColumn(weights));
+
+            // Order by fastest to slowest within each group
+            WithOrderer(new DefaultOrderer(SummaryOrderPolicy.FastestToSlowest));
+
+            HideColumns("Error", "StdDev");
+            AddJob(Job.Default
+                .WithWarmupCount(1)
+                .WithIterationCount(5));
+        }
+    }
+
     private List<Entry> _addData = null!;
     private List<(int x, int y)> _getCoordinates = null!;
     private List<(int minX, int minY, int maxX, int maxY)> _regions = null!;
@@ -29,11 +63,6 @@ public class WeightedBenchmark
 
     public static IMapStorageFactory[] StorageTypes =>
     [
-        new StorageFactory<MapStorage_BST>("BST"),
-        new StorageFactory<MapStorage_Dictionary>("DictLongKey"),
-        new StorageFactory<MapStorage_SortedArray>("SortedArray"),
-//        new StorageFactory<MapStorage_SortedDictionary>("SortedDict"),
-        new StorageFactory<MapStorage_StringKey>("DictStringKey"),
         new StorageFactory<MapStorage_Tiled>("Tiled_15", 1_000_000, 15),
         new StorageFactory<MapStorage_Tiled>("Tiled_16", 1_000_000, 16),
         new StorageFactory<MapStorage_Tiled>("Tiled_17", 1_000_000, 17)
@@ -43,24 +72,22 @@ public class WeightedBenchmark
     public void Setup()
     {
         var random = new Random(42);
-
-        // Prepare 1000 entries to add
         _addData = TestDataGenerator.GenerateRandomLabels(NumberOfLabels, seed: 42).ToList();
 
-        // Prepare 100k get coordinates (mix of existing and non-existing)
-        _getCoordinates = [];
+        _getCoordinates = new();
         for (var i = 0; i < 1_000_000/10; i++)
         {
-            // 50% existing, 50% random
-            var item = i % _addData.Count < _addData.Count / 2
-                ? (_addData[i % _addData.Count].X, _addData[i % _addData.Count].Y)
-                : (random.Next(1_000_000), random.Next(1_000_000));
-
-            _getCoordinates.Add(item);
+            if (i < 50_000 && i < _addData.Count)
+            {
+                _getCoordinates.Add((_addData[i % _addData.Count].X, _addData[i % _addData.Count].Y));
+            }
+            else
+            {
+                _getCoordinates.Add((random.Next(1_000_000), random.Next(1_000_000)));
+            }
         }
 
-        // Prepare 10k regions for GetInRegion
-        _regions = [];
+        _regions = new();
         for (var i = 0; i < 10_000; i++)
         {
             var centerX = random.Next(1_000_000);
@@ -75,15 +102,13 @@ public class WeightedBenchmark
             ));
         }
 
-        // Prepare 10k radii for GetWithinRadius
-        _radii = [];
+        _radii = new();
         for (var i = 0; i < 10_000; i++)
         {
             _radii.Add(random.Next(0, 800_000));
         }
 
-        // Prepare 10k center points with radii for GetWithinRadius(x, y, r)
-        _radiiFromCenter = [];
+        _radiiFromCenter = new();
         for (var i = 0; i < 10_000; i++)
         {
             var centerX = random.Next(1_000_000);
@@ -98,40 +123,35 @@ public class WeightedBenchmark
     {
         var storage = Storage.Create();
 
-        // 1000 Adds
         foreach (var entry in _addData)
         {
             storage.Add(entry);
         }
 
-        // 100k Gets
         foreach (var (x, y) in _getCoordinates)
         {
             storage.Get(x, y);
         }
 
-        // 1000 ListAll
         for (var i = 0; i < 100; i++)
         {
-            var result = storage.ListAll();
+            _ = storage.ListAll();
         }
 
-        // 10k GetInRegion
         foreach (var (minX, minY, maxX, maxY) in _regions)
         {
-            var result = storage.GetInRegion(minX, minY, maxX, maxY);
+            _ = storage.GetInRegion(minX, minY, maxX, maxY);
         }
 
-        // 10k GetWithinRadius
         foreach (var radius in _radii)
         {
-            var result = storage.GetWithinRadius(radius);
+            _ = storage.GetWithinRadius(radius);
         }
 
-        // 10k GetWithinRadius from center point
         foreach (var (x, y, radius) in _radiiFromCenter)
         {
-            var result = storage.GetWithinRadius(x, y, radius);
+            _ = storage.GetWithinRadius(x, y, radius);
         }
     }
 }
+

@@ -28,12 +28,12 @@ public class StandardBenchmarks
         new StorageFactory<MapStorage_BST>("BST"),
         new StorageFactory<MapStorage_Dictionary>("DictLongKey"),
         new StorageFactory<MapStorage_SortedArray>("SortedArray"),
-        new StorageFactory<MapStorage_SortedDictionary>("SortedDict"),
+        //new StorageFactory<MapStorage_SortedDictionary>("SortedDict"),
         new StorageFactory<MapStorage_StringKey>("DictStringKey"),
         new StorageFactory<MapStorage_Tiled>("Tiled"),
     ];
 
-    [Params(1000)]
+    [Params(1000, 10000, 50000)]
     public int LabelCount { get; set; }
 
     [GlobalSetup]
@@ -43,7 +43,7 @@ public class StandardBenchmarks
         _testData = TestDataGenerator.GenerateRandomLabels(LabelCount, seed: 42).ToList();
 
         // Prepare lookup coordinates (mix of existing and non-existing)
-        _lookupCoordinates = new();
+        _lookupCoordinates = [];
 
         // Add existing coordinates
         _lookupCoordinates.AddRange(_testData.Take(20).Select(t => (t.X, t.Y)));
@@ -123,6 +123,19 @@ public class StandardBenchmarks
             var centerX = Random.Shared.Next(1_000_000);
             var centerY = Random.Shared.Next(1_000_000);
             var r = Random.Shared.Next(100_000, 500_000);
+            var result = _prePopulatedStorage.GetWithinRadius(centerX, centerY, r).ToList();
+        }
+    }
+
+    [Benchmark]
+    [BenchmarkCategory("GetWithinSmallRadiusFromCenter")]
+    public void GetWithinSmallRadiusFromCenter()
+    {
+        for (var i = 0; i < 100; i++)
+        {
+            var centerX = Random.Shared.Next(1_000_000);
+            var centerY = Random.Shared.Next(1_000_000);
+            var r = Random.Shared.Next(1000, 100_000);
             var result = _prePopulatedStorage.GetWithinRadius(centerX, centerY, r).ToList();
         }
     }

@@ -42,7 +42,7 @@ public class MapStorage_Tiled : IMapStorage
         _count = 0;
     }
 
-    public MapStorage_Tiled() : this(1_000_000, 15)
+    public MapStorage_Tiled() : this(1_000_000, 16)
     {
     }
 
@@ -61,12 +61,13 @@ public class MapStorage_Tiled : IMapStorage
     private Dictionary<(int x, int y), Entry> GetOrCreateTile(int tileX, int tileY)
     {
         var tileKey = (tileX, tileY);
-        if (!_tiles.TryGetValue(tileKey, out var tile))
+
+        if (_tiles.TryGetValue(tileKey, out var tile))
         {
-            tile = new Dictionary<(int x, int y), Entry>();
-            _tiles[tileKey] = tile;
+            return tile;
         }
-        return tile;
+
+        return _tiles[tileKey] = [];
     }
 
     public bool Add(Entry entry)
@@ -76,6 +77,7 @@ public class MapStorage_Tiled : IMapStorage
         var (tileX, tileY) = GetTileCoords(entry.X, entry.Y);
         var tile = GetOrCreateTile(tileX, tileY);
         var key = (entry.X, entry.Y);
+
         var isNew = !tile.ContainsKey(key);
         tile[key] = entry;
 
