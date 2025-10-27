@@ -30,6 +30,7 @@ public class StandardBenchmarks
         new StorageFactory<MapStorage_SortedArray>("SortedArray"),
         new StorageFactory<MapStorage_SortedDictionary>("SortedDict"),
         new StorageFactory<MapStorage_StringKey>("DictStringKey"),
+        new StorageFactory<MapStorage_Tiled>("Tiled"),
     ];
 
     [Params(1000)]

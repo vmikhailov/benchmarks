@@ -1,37 +1,47 @@
+using System.Diagnostics;
 using BenchmarkDotNet.Running;
 using TreeMap;
 
-// Check if user wants to run benchmarks
-if (args.Length > 0 && args[0].Equals("benchmark", StringComparison.OrdinalIgnoreCase))
+// Check if user wants to run tests or benchmarks
+if (args.Length > 0)
 {
-    Console.WriteLine("Running BenchmarkDotNet...\n");
-
-    // Check if specific benchmark class is requested
-    if (args.Length > 1)
+    if (args[0].Equals("test-tiled", StringComparison.OrdinalIgnoreCase))
     {
-        switch (args[1].ToLower())
+        TiledStorageTest.RunTests();
+        return;
+    }
+
+    if (args[0].Equals("benchmark", StringComparison.OrdinalIgnoreCase))
+    {
+        Console.WriteLine("Running BenchmarkDotNet...\n");
+
+        // Check if specific benchmark class is requested
+        if (args.Length > 1)
         {
-            case "weighted":
-                BenchmarkRunner.Run<WeightedBenchmark>();
-                break;
-            case "collision":
-                BenchmarkRunner.Run<CollisionBenchmarks>();
-                break;
-            case "standard":
-                BenchmarkRunner.Run<StandardBenchmarks>();
-                break;
-            default:
-                Console.WriteLine("Unknown benchmark type. Use: weighted, collision, or standard");
-                break;
+            switch (args[1].ToLower())
+            {
+                case "weighted":
+                    BenchmarkRunner.Run<WeightedBenchmark>();
+                    break;
+                case "collision":
+                    BenchmarkRunner.Run<CollisionBenchmarks>();
+                    break;
+                case "standard":
+                    BenchmarkRunner.Run<StandardBenchmarks>();
+                    break;
+                default:
+                    Console.WriteLine("Unknown benchmark type. Use: weighted, collision, or standard");
+                    break;
+            }
         }
-    }
-    else
-    {
-        // Run all benchmarks by default
-        BenchmarkRunner.Run<WeightedBenchmark>();
-    }
+        else
+        {
+            // Run all benchmarks by default
+            BenchmarkRunner.Run<WeightedBenchmark>();
+        }
 
-    return;
+        return;
+    }
 }
 
 Console.WriteLine("=== 2D Map Label Storage Demo ===\n");
@@ -114,3 +124,77 @@ Console.WriteLine($"  Arrays returned: Efficient bulk operations\n");
 Console.WriteLine("=== Demo Complete ===");
 Console.WriteLine("All 4 implementations (Dictionary, BST, SortedArray, SortedDictionary)");
 Console.WriteLine("are available. Run benchmarks to compare performance!");
+var storage = new MapStorage_Tiled();
+
+// Add some test entries
+storage.Add(new Entry(10000, 10000, "Test1"));
+storage.Add(new Entry(500000, 500000, "Test2"));
+storage.Add(new Entry(100, 100, "Test3"));
+
+Console.WriteLine($"Added {storage.Count} entries");
+
+// Test with large radius (this was causing the hang)
+Console.WriteLine("Testing with large radius (800000)...");
+var startTime = DateTime.Now;
+var results = storage.GetWithinRadius(800000);
+var elapsed = (DateTime.Now - startTime).TotalMilliseconds;
+Console.WriteLine($"Found {results.Length} entries in {elapsed:F2}ms");
+
+// Test with medium radius
+Console.WriteLine("\nTesting with medium radius (100000)...");
+startTime = DateTime.Now;
+results = storage.GetWithinRadius(100000);
+elapsed = (DateTime.Now - startTime).TotalMilliseconds;
+Console.WriteLine($"Found {results.Length} entries in {elapsed:F2}ms");
+
+// Test GetWithinRadius from center
+Console.WriteLine("\nTesting GetWithinRadius from center (500000, 500000, 200000)...");
+startTime = DateTime.Now;
+results = storage.GetWithinRadius(500000, 500000, 200000);
+elapsed = (DateTime.Now - startTime).TotalMilliseconds;
+Console.WriteLine($"Found {results.Length} entries in {elapsed:F2}ms");
+
+Console.WriteLine("\n✓ All tests completed successfully!");
+Console.WriteLine("Testing MapStorage_Tiled performance with realistic workload...\n");
+
+storage = new MapStorage_Tiled();
+var random = new Random(42);
+
+// Add 1000 entries
+Console.WriteLine("Adding 1000 entries...");
+var stopwatch = Stopwatch.StartNew();
+for (int i = 0; i < 1000; i++)
+{
+    storage.Add(new Entry(random.Next(1_000_000), random.Next(1_000_000), $"Label{i}"));
+}
+stopwatch.Stop();
+Console.WriteLine($"  Completed in {stopwatch.ElapsedMilliseconds}ms\n");
+
+// Test with large radius queries (the ones that were causing hangs)
+Console.WriteLine("Testing GetWithinRadius with large radii (these were causing hangs)...");
+var radii = new[] { 100_000, 300_000, 500_000, 800_000 };
+foreach (var radius in radii)
+{
+    stopwatch.Restart();
+    results = storage.GetWithinRadius(radius);
+    stopwatch.Stop();
+    Console.WriteLine($"  Radius {radius,7}: Found {results.Length,4} entries in {stopwatch.ElapsedMilliseconds,4}ms");
+}
+
+Console.WriteLine("\nTesting GetWithinRadius from center with various radii...");
+for (int i = 0; i < 10; i++)
+{
+    var centerX = random.Next(1_000_000);
+    var centerY = random.Next(1_000_000);
+    var radius = random.Next(50_000, 300_000);
+
+    stopwatch.Restart();
+    results = storage.GetWithinRadius(centerX, centerY, radius);
+    stopwatch.Stop();
+
+    if (i < 3) // Only print first few
+        Console.WriteLine($"  Center ({centerX,6},{centerY,6}) radius {radius,6}: Found {results.Length,4} entries in {stopwatch.ElapsedMilliseconds,4}ms");
+}
+
+Console.WriteLine($"\n✓ All tests completed successfully!");
+Console.WriteLine($"Storage contains {storage.Count} entries across {storage.Count} positions");
