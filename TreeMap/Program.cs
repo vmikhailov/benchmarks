@@ -50,9 +50,8 @@ static void RunBenchmark(string[] args)
             case "weighted":
                 BenchmarkRunner.Run<WeightedBenchmark>();
                 break;
-            case "weighted_aggregated":
             case "aggregated":
-                BenchmarkRunner.Run<WeightedBenchmarkWithCustomAggregation>();
+                BenchmarkRunner.Run<WeightedBenchmarkAgg>();
                 break;
             case "collision":
                 BenchmarkRunner.Run<CollisionBenchmarks>();

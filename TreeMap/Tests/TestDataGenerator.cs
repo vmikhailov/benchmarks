@@ -1,6 +1,18 @@
 namespace TreeMap;
 
 /// <summary>
+/// Container for benchmark seed data.
+/// </summary>
+public class BenchmarkSeedData
+{
+    public List<Entry> AddData { get; set; } = null!;
+    public List<(int x, int y)> GetCoordinates { get; set; } = null!;
+    public List<(int minX, int minY, int maxX, int maxY)> Regions { get; set; } = null!;
+    public List<int> Radii { get; set; } = null!;
+    public List<(int x, int y, int radius)> RadiiFromCenter { get; set; } = null!;
+}
+
+/// <summary>
 /// Generates test data for map label storage testing.
 /// </summary>
 public static class TestDataGenerator
@@ -113,6 +125,67 @@ public static class TestDataGenerator
 
             yield return new(x, y, label);
         }
+    }
+
+    /// <summary>
+    /// Generates benchmark seed data including coordinates, regions, and radii for testing.
+    /// </summary>
+    public static BenchmarkSeedData GenerateBenchmarkSeedData(
+        List<Entry> addData,
+        int seed = 42)
+    {
+        var random = new Random(seed);
+        var seedData = new BenchmarkSeedData
+        {
+            AddData = addData,
+            GetCoordinates = [],
+            Regions = [],
+            Radii = [],
+            RadiiFromCenter = []
+        };
+
+        // Prepare 100k get coordinates (mix of existing and non-existing)
+        for (var i = 0; i < 1_000_000 / 10; i++)
+        {
+            // 50% existing, 50% random
+            var item = i % seedData.AddData.Count < seedData.AddData.Count / 2
+                ? (seedData.AddData[i % seedData.AddData.Count].X, seedData.AddData[i % seedData.AddData.Count].Y)
+                : (random.Next(1_000_000), random.Next(1_000_000));
+
+            seedData.GetCoordinates.Add(item);
+        }
+
+        // Prepare 10k regions for GetInRegion
+        for (var i = 0; i < 10_000; i++)
+        {
+            var centerX = random.Next(1_000_000);
+            var centerY = random.Next(1_000_000);
+            var size = random.Next(50_000, 200_000);
+
+            seedData.Regions.Add((
+                Math.Max(0, centerX - size / 2),
+                Math.Max(0, centerY - size / 2),
+                Math.Min(999_999, centerX + size / 2),
+                Math.Min(999_999, centerY + size / 2)
+            ));
+        }
+
+        // Prepare 10k radii for GetWithinRadius
+        for (var i = 0; i < 10_000; i++)
+        {
+            seedData.Radii.Add(random.Next(0, 800_000));
+        }
+
+        // Prepare 10k center points with radii for GetWithinRadius(x, y, r)
+        for (var i = 0; i < 10_000; i++)
+        {
+            var centerX = random.Next(1_000_000);
+            var centerY = random.Next(1_000_000);
+            var radius = random.Next(1_000, 100_000);
+            seedData.RadiiFromCenter.Add((centerX, centerY, radius));
+        }
+
+        return seedData;
     }
 
     /// <summary>
