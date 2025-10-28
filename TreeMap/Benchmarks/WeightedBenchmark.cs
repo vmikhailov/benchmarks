@@ -1,6 +1,9 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Filters;
+using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Order;
+using BenchmarkDotNet.Running;
 
 namespace TreeMap;
 
@@ -11,7 +14,8 @@ namespace TreeMap;
 [MemoryDiagnoser]
 [RankColumn]
 [Orderer(SummaryOrderPolicy.FastestToSlowest)]
-[HideColumns("Error", "StdDev")]
+[HideColumns("Error", "StdDev", "Median")]
+[Config(typeof(CustomConfig))]
 //[SimpleJob(warmupCount: 1, iterationCount: 5)]
 public class WeightedBenchmark
 {
@@ -20,6 +24,34 @@ public class WeightedBenchmark
     private List<(int minX, int minY, int maxX, int maxY)> _regions = null!;
     private List<int> _radii = null!;
     private List<(int x, int y, int radius)> _radiiFromCenter = null!;
+    
+
+    private class CustomConfig : ManualConfig
+    {
+        public CustomConfig()
+        {
+            AddJob(Job.Default);
+            
+            // Filter out BST with large datasets
+            WithOptions(ConfigOptions.DisableOptimizationsValidator);
+            
+            // Add a filter to exclude specific combinations
+            AddFilter(new ParameterFilter());
+        }
+
+        private class ParameterFilter : IFilter
+        {
+            public bool Predicate(BenchmarkCase benchmarkCase)
+            {
+                // Get the Storage parameter
+                var storageParam = benchmarkCase.Parameters["Storage"]?.ToString() ?? "";
+                var numberOfLabels = (int?)benchmarkCase.Parameters["NumberOfLabels"];
+
+                // Exclude BST with 50000 labels
+                return !(storageParam.Contains("BST") && numberOfLabels == 50000);
+            }
+        }
+    }
 
     [ParamsSource(nameof(StorageTypes))]
     public IMapStorageFactory Storage { get; set; } = null!;
@@ -30,15 +62,15 @@ public class WeightedBenchmark
 
     public static IMapStorageFactory[] StorageTypes =>
     [
-//        new StorageFactory<MapStorage_BST>("BST"),
-//        new StorageFactory<MapStorage_Dictionary>("DictLongKey"),
-//        new StorageFactory<MapStorage_SortedArray>("SortedArray"),
-        new StorageFactory<MapStorage_Tiled>("Tiled_15", 1_000_000, 15),
+        new StorageFactory<MapStorage_BST>("BST"),
+        new StorageFactory<MapStorage_Dictionary>("DictLongKey"),
+        new StorageFactory<MapStorage_SortedArray>("SortedArray"),
+        //new StorageFactory<MapStorage_Tiled>("Tiled_15", 1_000_000, 15),
         new StorageFactory<MapStorage_Tiled>("Tiled_16", 1_000_000, 16),
-        new StorageFactory<MapStorage_Tiled>("Tiled_17", 1_000_000, 17),
-        new StorageFactory<MapStorage_DynamicTiled>("Dynamic_32", 1_000_000, 32),
-        new StorageFactory<MapStorage_DynamicTiled>("Dynamic_64", 1_000_000, 64),
+        //new StorageFactory<MapStorage_Tiled>("Tiled_17", 1_000_000, 17),
         new StorageFactory<MapStorage_DynamicTiled>("Dynamic_128", 1_000_000, 128),
+        new StorageFactory<MapStorage_DynamicTiled>("Dynamic_256", 1_000_000, 256),
+        new StorageFactory<MapStorage_DynamicTiled>("Dynamic_512", 1_000_000, 512),
 //      new StorageFactory<MapStorage_SortedDictionary>("SortedDict"),
 //      new StorageFactory<MapStorage_StringKey>("DictStringKey"),
     ];

@@ -31,6 +31,7 @@ public class StandardBenchmarks
         //new StorageFactory<MapStorage_SortedDictionary>("SortedDict"),
         new StorageFactory<MapStorage_StringKey>("DictStringKey"),
         new StorageFactory<MapStorage_Tiled>("Tiled"),
+        new StorageFactory<MapStorage_DynamicTiled>("Dymamic", 1_000_000, 256),
     ];
 
     [Params(1000, 10000, 50000)]
